@@ -5,7 +5,7 @@ import 'pages/home_page.dart';
 import 'pages/login.dart';
 
 class WidgetTree extends StatefulWidget {
-  const WidgetTree({Key? key}) : super(key: key);
+  const WidgetTree({super.key});
 
   @override
   State<WidgetTree> createState() => _WidgetTreeState();
