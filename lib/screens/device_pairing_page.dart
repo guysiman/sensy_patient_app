@@ -10,7 +10,7 @@ class DevicePairingPage extends StatefulWidget {
 class _DevicePairingPageState extends State<DevicePairingPage> {
   Widget device(deviceName) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(vertical: 24.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -35,20 +35,19 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              children: [
-                Text('Pairing', style: Theme.of(context).textTheme.titleMedium),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        device('IPG'),
-                        device('External controller'),
-                        device('External sensors')
-                      ]),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Text('Pairing',
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    device('IPG'),
+                    device('External controller'),
+                    device('External sensors')
+                  ]),
             ),
             SizedBox(
                 width: double.infinity,

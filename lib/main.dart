@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
           ),
           outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Color(0xFF75939B)),
+                side: BorderSide(width: 1.0, color: Color(0xFF75939B)),
                 foregroundColor: Color(0xFF3A6470),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 shape: RoundedRectangleBorder(
