@@ -14,7 +14,7 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(deviceName, style: Theme.of(context).textTheme.bodyMedium),
+          Text(deviceName, style: Theme.of(context).textTheme.bodyLarge),
           OutlinedButton(
             onPressed: () {
               Navigator.pushNamed(context, '/genericdevicepairingpage',
@@ -30,33 +30,39 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Text('Pairing',
-                          style: Theme.of(context).textTheme.titleMedium),
-                    ),
-                    device('IPG'),
-                    device('External controller'),
-                    device('External sensors')
-                  ]),
-            ),
-            SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Text('Pairing',
+                            style: Theme.of(context).textTheme.titleMedium),
+                      ),
+                      device('IPG'),
+                      device('External controller'),
+                      device('External sensors')
+                    ]),
+              ),
+              SizedBox(
+                  height: 44,
+                  width: double.infinity,
+                  child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/homepage');
                     },
-                    child: const Text('Go to the Home screen'))),
-          ],
+                    child: Text(
+                      'Go to the Home Screen',
+                    ),
+                  )),
+            ],
+          ),
         ),
       ),
     );

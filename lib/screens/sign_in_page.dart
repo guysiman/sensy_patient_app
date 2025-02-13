@@ -10,6 +10,21 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isButtonEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_checkFields);
+    _passwordController.addListener(_checkFields);
+  }
+
+  void _checkFields() {
+    setState(() {
+      _isButtonEnabled = _usernameController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
 
   @override
   void dispose() {
@@ -35,8 +50,6 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Adjust background if desired
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -45,86 +58,104 @@ class _SignInPageState extends State<SignInPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Title
-                Text(
-                  'Sign in',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 32),
+                Text('Sign in', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 40),
 
                 // Username field
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Username',
+                        style: Theme.of(context).textTheme.bodyMedium)),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Username',
-                    hintText: 'Enter your username',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    labelText: 'Enter your username',
+                    labelStyle:
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
+                    border: InputBorder.none,
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Password field
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Password',
+                        style: Theme.of(context).textTheme.bodyMedium)),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    labelText: 'Enter your password',
+                    labelStyle:
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
+                    border: InputBorder.none,
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),
 
+                const SizedBox(height: 8),
+
                 // Forgot password link
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _onForgotPassword,
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
+                TextButton(
+                  onPressed: _onForgotPassword,
+                  child: Text('Forgot password?',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          )),
                 ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 40),
 
                 // Enter account button
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 44,
                   child: ElevatedButton(
-                    onPressed: _onSignIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueGrey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      disabledBackgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withAlpha((255 * 0.5).toInt()), // Background Color
+                      disabledForegroundColor: Colors.white70, //Text Color
                     ),
-                    child: const Text(
-                      'Enter account',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                    onPressed: _isButtonEnabled
+                        ? () {
+                            _onSignIn();
+                          }
+                        : null,
+                    child: const Text('Enter account'),
                   ),
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 40),
 
                 // Sign up prompt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account? "),
+                    Text(
+                      "Don't have an account? ",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontSize: 18,
+                          ),
+                    ),
                     GestureDetector(
                       onTap: _onSignUp,
-                      child: const Text(
+                      child: Text(
                         'Sign up',
-                        style: TextStyle(
-                          color: Colors.blueGrey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                     ),
                   ],
