@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart'; // Import your home page
 
 class SignInPage extends StatefulWidget {
   const SignInPage({Key? key}) : super(key: key);
@@ -22,12 +21,7 @@ class _SignInPageState extends State<SignInPage> {
   void _onSignIn() {
     // Currently, just navigate to the home page.
     // Add actual login logic here (e.g., Firebase Auth) if needed.
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MyHomePage(title: 'Home Page'),
-      ),
-    );
+    Navigator.pushNamed(context, '/homepage');
   }
 
   void _onForgotPassword() {
