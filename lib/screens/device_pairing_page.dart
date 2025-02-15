@@ -17,7 +17,7 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
           Text(deviceName, style: Theme.of(context).textTheme.bodyLarge),
           OutlinedButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/genericdevicepairingpage',
+              Navigator.pushNamed(context, '/bluetoothscreen',
                   arguments: deviceName);
             },
             child: const Text('Pair'),

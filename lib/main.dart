@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'screens/device_pairing_page.dart';
 import 'screens/home_page.dart';
 import 'screens/sign_in_page.dart';
+import 'screens/bluetooth_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,6 +91,7 @@ class MyApp extends StatelessWidget {
           '/homepage': (context) => HomePage(),
           '/devicepairingpage': (context) => DevicePairingPage(),
           '/genericdevicepairingpage': (context) => GenericDevicePairingPage(),
+          '/bluetoothscreen': (context) => BluetoothScreen(),
         });
   }
 }
