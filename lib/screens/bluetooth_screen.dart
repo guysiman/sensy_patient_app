@@ -10,30 +10,43 @@ class BluetoothScreen extends StatefulWidget {
 
 class _BluetoothScreenState extends State<BluetoothScreen> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
-  bool isBluetoothOn = false;
+  bool isScanning = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkBluetoothState();
-    _startScanning();
-  }
-
-  Future<void> _checkBluetoothState() async {
-    bool isOn = await flutterBlue.isOn;
-    setState(() {
-      isBluetoothOn = isOn;
-    });
-  }
-
-  Future<void> _startScanning() async {
-    if (isBluetoothOn) {
-      flutterBlue.startScan(timeout: Duration(seconds: 4));
+  String _getTitle(String deviceType) {
+    switch (deviceType.toLowerCase()) {
+      case 'ipg':
+        return 'Pair an IPG';
+      case 'external controller':
+        return 'Pair an EC';
+      case 'external sensors':
+        return 'Pair sensors';
+      default:
+        return 'Pair Device';
     }
   }
 
   @override
+  void initState() {
+    super.initState();
+    _startScanning();
+  }
+
+  Future<void> _startScanning() async {
+    setState(() {
+      isScanning = true;
+    });
+    
+    await Future.delayed(const Duration(seconds: 4));
+    
+    setState(() {
+      isScanning = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final deviceType = ModalRoute.of(context)!.settings.arguments as String;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -57,8 +70,8 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pair an IPG',
-              style: TextStyle(
+              _getTitle(deviceType),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2D3436),
@@ -67,13 +80,13 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             SizedBox(height: 16),
             Text(
               'Searching nearby...',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 24,
                 color: Colors.grey,
               ),
             ),
             SizedBox(height: 24),
-            // Device List
+            // Example device buttons
             _buildDeviceButton('IPG 3452fg5'),
             _buildDeviceButton('AirPods - Eugene'),
             _buildDeviceButton('Column-23'),
@@ -82,7 +95,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             // Instructions Section
             Text(
               'How to connect your device via Bluetooth',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF2D3436),
@@ -171,17 +184,4 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       ],
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: BluetoothScreen(),
-    theme: ThemeData(
-      scaffoldBackgroundColor: Colors.white,
-      appBarTheme: AppBarTheme(
-        color: Colors.white,
-        elevation: 0,
-      ),
-    ),
-  ));
 }
