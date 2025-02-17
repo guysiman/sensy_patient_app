@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class BluetoothScreen extends StatefulWidget {
   const BluetoothScreen({super.key});
@@ -33,101 +32,143 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     }
   }
 
-  void _navigateToPairingScreen() {
-    if (isBluetoothOn) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PairingScreen()),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => BluetoothOffScreen()),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Bluetooth Scanner'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: BackButton(
+          color: Color(0xFF2D4F63),
+        ),
+        title: Text(
+          'Back',
+          style: TextStyle(
+            color: Color(0xFF2D4F63),
+            fontSize: 18,
+          ),
+        ),
+        titleSpacing: 0,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ElevatedButton(
-              onPressed: _navigateToPairingScreen,
-              child: Text('Pair Device'),
+            Text(
+              'Pair an IPG',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3436),
+              ),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _startScanning,
-              child: Text('Refresh Scan'),
+            SizedBox(height: 16),
+            Text(
+              'Searching nearby...',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 24),
+            // Device List
+            _buildDeviceButton('IPG 3452fg5'),
+            _buildDeviceButton('AirPods - Eugene'),
+            _buildDeviceButton('Column-23'),
+            _buildDeviceButton('JBL-Go'),
+            SizedBox(height: 40),
+            // Instructions Section
+            Text(
+              'How to connect your device via Bluetooth',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2D3436),
+              ),
+            ),
+            SizedBox(height: 24),
+            _buildInstructionStep(
+              'Step one',
+              'place the charging unit above the implant.',
+            ),
+            SizedBox(height: 16),
+            _buildInstructionStep(
+              'Step two',
+              'press the pairing button on a charging unit for 10 seconds until IPG appears on the list.',
+            ),
+            SizedBox(height: 16),
+            _buildInstructionStep(
+              'Step three',
+              'press connect button to the IPG.',
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class BluetoothOffScreen extends StatelessWidget {
-  const BluetoothOffScreen({super.key});
-
-  Future<void> _openBluetoothSettings() async {
-    Uri url = Uri.parse('app-settings:bluetooth');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      throw 'Could not open Bluetooth settings.';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bluetooth Off'),
+  Widget _buildDeviceButton(String deviceName) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Color(0xFFF5F6F7),
+        borderRadius: BorderRadius.circular(8),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Bluetooth is turned off',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: ListTile(
+        title: Text(
+          deviceName,
+          style: TextStyle(
+            fontSize: 18,
+            color: Color(0xFF2D3436),
+          ),
+        ),
+        trailing: TextButton(
+          onPressed: () {},
+          child: Text(
+            'Connect',
+            style: TextStyle(
+              color: Color(0xFF2D4F63),
+              fontSize: 16,
             ),
-            SizedBox(height: 10),
-            Text(
-              'Please enable Bluetooth to pair your device',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _openBluetoothSettings,
-              child: Text('Go to Bluetooth Settings'),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
-}
 
-class PairingScreen extends StatelessWidget {
-  const PairingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Pairing Screen'),
-      ),
-      body: Center(
-        child: Text('Pair your device here.'),
-      ),
+  Widget _buildInstructionStep(String stepTitle, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          margin: EdgeInsets.only(top: 8, right: 8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFFE3A69C),
+          ),
+        ),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF2D3436),
+              ),
+              children: [
+                TextSpan(
+                  text: '$stepTitle — ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: description),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -135,5 +176,12 @@ class PairingScreen extends StatelessWidget {
 void main() {
   runApp(MaterialApp(
     home: BluetoothScreen(),
+    theme: ThemeData(
+      scaffoldBackgroundColor: Colors.white,
+      appBarTheme: AppBarTheme(
+        color: Colors.white,
+        elevation: 0,
+      ),
+    ),
   ));
 }

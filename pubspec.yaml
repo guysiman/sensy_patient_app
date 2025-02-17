@@ -39,7 +39,6 @@ dependencies:
   # for bluetooth functionality and for being able to launch a URL from the app
   flutter_blue: ^0.8.0
   url_launcher: ^6.0.20
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
