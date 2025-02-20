@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 
 class DevicePairingPage extends StatefulWidget {
   const DevicePairingPage({super.key});
@@ -8,6 +9,31 @@ class DevicePairingPage extends StatefulWidget {
 }
 
 class _DevicePairingPageState extends State<DevicePairingPage> {
+  FlutterBlue flutterBlue = FlutterBlue.instance;
+  bool isBluetoothOn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBluetoothState();
+  }
+
+  Future<void> _checkBluetoothState() async {
+    bool isOn = await flutterBlue.isOn;
+    setState(() {
+      isBluetoothOn = isOn;
+    });
+  }
+
+  void _navigateScreen(String deviceName) {
+    if (isBluetoothOn) {
+      Navigator.pushNamed(context, '/bluetoothpage', arguments: deviceName);
+    } else {
+      // TODO : change this to bluetooth off page, but for testing purposes
+      Navigator.pushNamed(context, '/bluetoothpage', arguments: deviceName);
+    }
+  }
+
   Widget device(deviceName) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24.0),
@@ -17,8 +43,7 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
           Text(deviceName, style: Theme.of(context).textTheme.bodyLarge),
           OutlinedButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/bluetoothscreen',
-                  arguments: deviceName);
+              _navigateScreen(deviceName);
             },
             child: const Text('Pair'),
           ),
