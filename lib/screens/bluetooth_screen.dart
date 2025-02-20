@@ -11,6 +11,12 @@ class BluetoothScreen extends StatefulWidget {
 class _BluetoothScreenState extends State<BluetoothScreen> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isScanning = false;
+  List<String> devices = [
+    'IPG 3452fg5',
+    'AirPods - Eugene',
+    'Column-23',
+    'JBL-Go'
+  ];
 
   String _getTitle(String deviceType) {
     switch (deviceType.toLowerCase()) {
@@ -25,6 +31,29 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     }
   }
 
+  List<String> _getInstructions(String deviceType) {
+    switch (deviceType.toLowerCase()) {
+      case 'ipg':
+        return [
+          'Step one — place the charging unit above the implant.',
+          'Step two — press the pairing button on a charging unit for 10 seconds until IPG appears on the list.',
+          'Step three — press connect button to the IPG.'
+        ];
+      case 'external controller':
+        return [
+          'Step one — Press the pairing button on the External Controller for 10 seconds until the device appears on the list.',
+          'Step two — Press connect to the External Controller'
+        ];
+      case 'external sensors':
+        return [
+          'Step one — Press the pairing button on the Insole Sensor for 10 seconds until the Sensor appears on the list.',
+          'Step 2 — Press connect to the Sensor.'
+        ];
+      default:
+        return ['Step one', 'Step two'];
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -35,9 +64,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     setState(() {
       isScanning = true;
     });
-    
+
     await Future.delayed(const Duration(seconds: 4));
-    
+
     setState(() {
       isScanning = false;
     });
@@ -45,12 +74,14 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final deviceType = ModalRoute.of(context)!.settings.arguments as String;
+    String deviceType = "default";
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String) {
+      deviceType = args;
+    }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: BackButton(
           color: Color(0xFF2D4F63),
@@ -65,58 +96,51 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         titleSpacing: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getTitle(deviceType),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3436),
+        padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _getTitle(deviceType),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Searching nearby...',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 24,
-                color: Colors.grey,
+              SizedBox(height: 24),
+              Text(
+                'Searching nearby...',
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(color: Color(0xFF9CB1B7)),
               ),
-            ),
-            SizedBox(height: 24),
-            // Example device buttons
-            _buildDeviceButton('IPG 3452fg5'),
-            _buildDeviceButton('AirPods - Eugene'),
-            _buildDeviceButton('Column-23'),
-            _buildDeviceButton('JBL-Go'),
-            SizedBox(height: 40),
-            // Instructions Section
-            Text(
-              'How to connect your device via Bluetooth',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2D3436),
+              SizedBox(height: 16),
+
+              // Example device buttons
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: devices
+                    .map(
+                      (deviceName) => _buildDeviceButton(deviceName),
+                    )
+                    .toList(),
               ),
-            ),
-            SizedBox(height: 24),
-            _buildInstructionStep(
-              'Step one',
-              'place the charging unit above the implant.',
-            ),
-            SizedBox(height: 16),
-            _buildInstructionStep(
-              'Step two',
-              'press the pairing button on a charging unit for 10 seconds until IPG appears on the list.',
-            ),
-            SizedBox(height: 16),
-            _buildInstructionStep(
-              'Step three',
-              'press connect button to the IPG.',
-            ),
-          ],
+
+              SizedBox(height: 118),
+
+              // Instructions Section
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'How to connect your device via Bluetooth',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
+              SizedBox(height: 12),
+
+              _buildInstructions(deviceType),
+            ],
+          ),
         ),
       ),
     );
@@ -126,32 +150,44 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF5F6F7),
-        borderRadius: BorderRadius.circular(8),
+        color: Color(0xFFEEF3F4),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         title: Text(
           deviceName,
-          style: TextStyle(
-            fontSize: 18,
-            color: Color(0xFF2D3436),
-          ),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         trailing: TextButton(
           onPressed: () {},
           child: Text(
             'Connect',
-            style: TextStyle(
-              color: Color(0xFF2D4F63),
-              fontSize: 16,
-            ),
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(color: Theme.of(context).colorScheme.primary),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInstructionStep(String stepTitle, String description) {
+  Widget _buildInstructions(String deviceName) {
+    List<String> instructions = _getInstructions(deviceName);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: instructions
+          .map((instruction) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildInstructionStep(instruction),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildInstructionStep(String description) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -165,22 +201,11 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           ),
         ),
         Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF2D3436),
-              ),
-              children: [
-                TextSpan(
-                  text: '$stepTitle — ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: description),
-              ],
-            ),
-          ),
-        ),
+            child: Text(description,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.normal))),
       ],
     );
   }
