@@ -1,16 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
-class BluetoothScreen extends StatefulWidget {
-  const BluetoothScreen({super.key});
+/*
+TO DO
+- Scan and display a real time list of nearby Bluetooth devices
+- Include a refresh button to rescan for devices
+- Implement AUTOMATIC BLUETOOTH SCANNING on screen load
+*/
+
+class BluetoothPage extends StatefulWidget {
+  const BluetoothPage({super.key});
 
   @override
-  _BluetoothScreenState createState() => _BluetoothScreenState();
+  _BluetoothPageState createState() => _BluetoothPageState();
 }
 
-class _BluetoothScreenState extends State<BluetoothScreen> {
+class _BluetoothPageState extends State<BluetoothPage> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
-  bool isScanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startScanning();
+  }
+
+  Future<void> _startScanning() async {
+    flutterBlue.startScan(timeout: Duration(seconds: 4));
+  }
+
   List<String> devices = [
     'IPG 3452fg5',
     'AirPods - Eugene',
@@ -55,24 +72,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _startScanning();
-  }
-
-  Future<void> _startScanning() async {
-    setState(() {
-      isScanning = true;
-    });
-
-    await Future.delayed(const Duration(seconds: 4));
-
-    setState(() {
-      isScanning = false;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     String deviceType = "default";
     final args = ModalRoute.of(context)?.settings.arguments;
@@ -98,9 +97,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
             IconButton(
               icon: Icon(Icons.refresh),
               onPressed: () {
-                setState(() {
-                  // Refresh logic here
-                });
+                _startScanning();
               },
             ),
           ]),
