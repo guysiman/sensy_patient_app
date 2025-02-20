@@ -169,7 +169,9 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         trailing: TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushNamed(context, '/dummypage');
+          },
           child: Text(
             'Connect',
             style: Theme.of(context)

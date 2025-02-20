@@ -75,7 +75,15 @@ class _SignInPageState extends State<SignInPage> {
                         Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).hintColor,
                             ),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Color(0xFFE8EDEC))),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                          color: Color(
+                              0xFFE8EDEC)), // Border color when not focused
+                    ),
                     floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),
@@ -97,7 +105,15 @@ class _SignInPageState extends State<SignInPage> {
                         Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).hintColor,
                             ),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Color(0xFFE8EDEC))),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                          color: Color(
+                              0xFFE8EDEC)), // Border color when not focused
+                    ),
                     floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),

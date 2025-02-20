@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:sensy_patient_app/screens/generic_device_pairing_page.dart';
 import 'firebase_options.dart';
 
 import 'screens/device_pairing_page.dart';
+import 'screens/dummy_page.dart';
 import 'screens/home_page.dart';
 import 'screens/sign_in_page.dart';
 import 'screens/bluetooth_screen.dart';
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme(
             primary: Color(0xFF3A6470),
             onPrimary: Colors.white,
-            secondary: Color(0xFF489F32),
+            secondary: Color(0xFF75939B),
             onSecondary: Colors.white,
             error: Colors.red,
             onError: Colors.white,
@@ -78,6 +78,10 @@ class MyApp extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF253228),
               ),
+              labelSmall: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
               bodyLarge: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -95,8 +99,8 @@ class MyApp extends StatelessWidget {
           '/signinpage': (context) => SignInPage(),
           '/homepage': (context) => HomePage(),
           '/devicepairingpage': (context) => DevicePairingPage(),
-          '/genericdevicepairingpage': (context) => GenericDevicePairingPage(),
           '/bluetoothscreen': (context) => BluetoothScreen(),
+          '/dummypage': (context) => DummyPage(),
         });
   }
 }
