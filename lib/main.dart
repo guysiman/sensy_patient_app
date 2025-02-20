@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:sensy_patient_app/screens/generic_device_pairing_page.dart';
 import 'firebase_options.dart';
 
 import 'screens/device_pairing_page.dart';
@@ -95,7 +94,6 @@ class MyApp extends StatelessWidget {
           '/signinpage': (context) => SignInPage(),
           '/homepage': (context) => HomePage(),
           '/devicepairingpage': (context) => DevicePairingPage(),
-          '/genericdevicepairingpage': (context) => GenericDevicePairingPage(),
           '/bluetoothscreen': (context) => BluetoothScreen(),
         });
   }
