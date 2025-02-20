@@ -82,19 +82,28 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        leading: BackButton(
-          color: Color(0xFF2D4F63),
-        ),
-        title: Text(
-          'Back',
-          style: TextStyle(
+          elevation: 0,
+          leading: BackButton(
             color: Color(0xFF2D4F63),
-            fontSize: 18,
           ),
-        ),
-        titleSpacing: 0,
-      ),
+          title: Text(
+            'Back',
+            style: TextStyle(
+              color: Color(0xFF2D4F63),
+              fontSize: 18,
+            ),
+          ),
+          titleSpacing: 0,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {
+                  // Refresh logic here
+                });
+              },
+            ),
+          ]),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
