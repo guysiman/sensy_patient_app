@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+import 'widget_tree.dart';
+
 import 'screens/bluetooth_off_page.dart';
 import 'screens/device_pairing_page.dart';
 import 'screens/dummy_page.dart';
@@ -95,7 +97,7 @@ class MyApp extends StatelessWidget {
               )),
           useMaterial3: true,
         ),
-        home: const SignInPage(),
+        home: const WidgetTree(),
         routes: {
           '/signinpage': (context) => SignInPage(),
           '/homepage': (context) => HomePage(),
