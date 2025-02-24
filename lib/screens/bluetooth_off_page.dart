@@ -21,6 +21,7 @@ class _BluetoothOffPageState extends State<BluetoothOffPage> {
   Future<void> _checkBluetoothState() async {
     bool isBluetoothOn = await flutterBlue.isOn;
     if (isBluetoothOn) {
+      // ignore: use_build_context_synchronously
       Navigator.pushNamed(context, '/devicepairingpage');
     }
   }

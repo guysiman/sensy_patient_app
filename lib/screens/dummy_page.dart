@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'connection_status_popup.dart';
+import '../modals/connection_status_popup.dart';
 
 class DummyPage extends StatefulWidget {
   const DummyPage({super.key});

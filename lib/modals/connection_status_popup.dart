@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
 
+/*
+  TO DO
+    If connection is lost while popup is open, status should update dynamically
+    If connnection status cannot be received, an error messaged shall be displayed
+    ("Unable to fetch connection status. Please try again.")
+    If the EC is not paired, the popup should display "EC not found" instead of "Connected"
+    State management: Provider or Bloc to fetch real-time connection data
+    Data source: connection data fetched from EC and sensor modules via Bluetooth
+*/
+
 void showConnectionStatusPopup(BuildContext context) {
   showDialog(
     context: context,
@@ -20,6 +30,7 @@ class _ConnectionStatusPopupState extends State<_ConnectionStatusPopup>
 
   // dummy data for now
   // mobile battery status, IPG battery, FW, serial#, connection, EC battery, FW, serial#, connection, sensor connections
+
   List<dynamic> connectionInfo = [
     '67%',
     '83%',
