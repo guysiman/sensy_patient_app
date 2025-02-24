@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:sensy_patient_app/screens/generic_device_pairing_page.dart';
 import 'firebase_options.dart';
 
+import 'widget_tree.dart';
+
+import 'screens/bluetooth_off_page.dart';
 import 'screens/device_pairing_page.dart';
+import 'screens/dummy_page.dart';
 import 'screens/home_page.dart';
 import 'screens/sign_in_page.dart';
+import 'screens/bluetooth_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,8 +27,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
-          scaffoldBackgroundColor: Colors.white,
-          primaryColor: Color(0xFF3A6470),
+          colorScheme: ColorScheme(
+            primary: Color(0xFF3A6470),
+            onPrimary: Colors.white,
+            secondary: Color(0xFF75939B),
+            onSecondary: Colors.white,
+            error: Colors.red,
+            onError: Colors.white,
+            surface: Colors.white,
+            onSurface: Color(0xFF253228),
+            brightness: Brightness.light,
+          ),
+          hintColor: Color(0xFF9CB1B7),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -40,7 +54,7 @@ class MyApp extends StatelessWidget {
           ),
           outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Color(0xFF75939B)),
+                side: BorderSide(width: 1.0, color: Color(0xFF75939B)),
                 foregroundColor: Color(0xFF3A6470),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 shape: RoundedRectangleBorder(
@@ -52,24 +66,45 @@ class MyApp extends StatelessWidget {
                 )),
           ),
           textTheme: TextTheme(
+              titleLarge: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF253228),
+              ),
               titleMedium: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF253228),
               ),
-              bodyMedium: TextStyle(
+              labelMedium: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF253228),
+              ),
+              labelSmall: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              bodyLarge: TextStyle(
                 fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF253228),
+              ),
+              bodyMedium: TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF253228),
               )),
           useMaterial3: true,
         ),
-        home: const SignInPage(),
+        home: const WidgetTree(),
         routes: {
           '/signinpage': (context) => SignInPage(),
           '/homepage': (context) => HomePage(),
           '/devicepairingpage': (context) => DevicePairingPage(),
-          '/genericdevicepairingpage': (context) => GenericDevicePairingPage(),
+          '/bluetoothpage': (context) => BluetoothPage(),
+          '/bluetoothoffpage': (context) => BluetoothOffPage(),
+          '/dummypage': (context) => DummyPage(),
         });
   }
 }

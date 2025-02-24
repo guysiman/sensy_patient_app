@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth.dart';
+import '../services/database.dart';
 
 class SignInPage extends StatefulWidget {
-  const SignInPage({Key? key}) : super(key: key);
+  const SignInPage({super.key});
 
   @override
   State<SignInPage> createState() => _SignInPageState();
@@ -10,6 +13,48 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isButtonEnabled = false;
+
+  String? errorMessage = '';
+
+  Future<void> signInWithEmailAndPassword(String username) async {
+    try {
+      await Auth().signInWithEmailAndPassword(
+          email: username, password: _passwordController.text);
+      debugPrint("getting here");
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        debugPrint(e.code);
+        switch (e.code) {
+          case 'invalid-email':
+          case 'invalid-credential':
+          case 'wrong-password':
+          case 'user-not-found':
+            errorMessage = "Invalid credentials";
+            break;
+          case 'network-request-failed':
+            errorMessage = "Please check your internet connection";
+            break;
+          default:
+            errorMessage = "An unexpected error occurred";
+        }
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_checkFields);
+    _passwordController.addListener(_checkFields);
+  }
+
+  void _checkFields() {
+    setState(() {
+      _isButtonEnabled = _usernameController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
 
   @override
   void dispose() {
@@ -18,10 +63,20 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  void _onSignIn() {
-    // Currently, just navigate to the home page.
-    // Add actual login logic here (e.g., Firebase Auth) if needed.
-    Navigator.pushNamed(context, '/homepage');
+  void _onSignIn() async {
+    String username = _usernameController.text;
+    if (username.contains('@')) {
+      signInWithEmailAndPassword(username);
+    } else {
+      String? email = await DatabaseService().getEmailByUsername(username);
+      if (email == null) {
+        setState(() {
+          errorMessage = 'Invalid username';
+        });
+      } else {
+        signInWithEmailAndPassword(email);
+      }
+    }
   }
 
   void _onForgotPassword() {
@@ -35,8 +90,6 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Adjust background if desired
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -45,86 +98,124 @@ class _SignInPageState extends State<SignInPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Title
-                Text(
-                  'Sign in',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 32),
+                Text('Sign in', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 40),
 
                 // Username field
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Username',
+                        style: Theme.of(context).textTheme.bodyMedium)),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Username',
-                    hintText: 'Enter your username',
+                    labelText: 'Enter your username',
+                    labelStyle:
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Color(0xFFE8EDEC))),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                          color: Color(
+                              0xFFE8EDEC)), // Border color when not focused
                     ),
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Password field
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Password',
+                        style: Theme.of(context).textTheme.bodyMedium)),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
+                    labelText: 'Enter your password',
+                    labelStyle:
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Color(0xFFE8EDEC))),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                          color: Color(
+                              0xFFE8EDEC)), // Border color when not focused
                     ),
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                 ),
 
+                const SizedBox(height: 8),
+
                 // Forgot password link
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _onForgotPassword,
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
+                TextButton(
+                  onPressed: _onForgotPassword,
+                  child: Text('Forgot password?',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          )),
                 ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 40),
+
+                if (errorMessage != '') Text('$errorMessage'),
+
+                const SizedBox(height: 40),
 
                 // Enter account button
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 44,
                   child: ElevatedButton(
-                    onPressed: _onSignIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueGrey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      disabledBackgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withAlpha((255 * 0.5).toInt()), // Background Color
+                      disabledForegroundColor: Colors.white70, //Text Color
                     ),
-                    child: const Text(
-                      'Enter account',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                    onPressed: _isButtonEnabled
+                        ? () {
+                            _onSignIn();
+                          }
+                        : null,
+                    child: const Text('Enter account'),
                   ),
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 40),
 
                 // Sign up prompt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account? "),
+                    Text(
+                      "Don't have an account? ",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontSize: 18,
+                          ),
+                    ),
                     GestureDetector(
                       onTap: _onSignUp,
-                      child: const Text(
+                      child: Text(
                         'Sign up',
-                        style: TextStyle(
-                          color: Colors.blueGrey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                     ),
                   ],
