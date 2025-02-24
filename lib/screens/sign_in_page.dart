@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth.dart';
+import '../services/database.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -11,6 +14,33 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
+
+  String? errorMessage = '';
+
+  Future<void> signInWithEmailAndPassword(String username) async {
+    try {
+      await Auth().signInWithEmailAndPassword(
+          email: username, password: _passwordController.text);
+      debugPrint("getting here");
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        debugPrint(e.code);
+        switch (e.code) {
+          case 'invalid-email':
+          case 'invalid-credential':
+          case 'wrong-password':
+          case 'user-not-found':
+            errorMessage = "Invalid credentials";
+            break;
+          case 'network-request-failed':
+            errorMessage = "Please check your internet connection";
+            break;
+          default:
+            errorMessage = "An unexpected error occurred";
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -33,10 +63,20 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  void _onSignIn() {
-    // Currently, just navigate to the home page.
-    // Add actual login logic here (e.g., Firebase Auth) if needed.
-    Navigator.pushNamed(context, '/homepage');
+  void _onSignIn() async {
+    String username = _usernameController.text;
+    if (username.contains('@')) {
+      signInWithEmailAndPassword(username);
+    } else {
+      String? email = await DatabaseService().getEmailByUsername(username);
+      if (email == null) {
+        setState(() {
+          errorMessage = 'Invalid username';
+        });
+      } else {
+        signInWithEmailAndPassword(email);
+      }
+    }
   }
 
   void _onForgotPassword() {
@@ -128,6 +168,10 @@ class _SignInPageState extends State<SignInPage> {
                             color: Theme.of(context).colorScheme.primary,
                           )),
                 ),
+
+                const SizedBox(height: 40),
+
+                if (errorMessage != '') Text('$errorMessage'),
 
                 const SizedBox(height: 40),
 
