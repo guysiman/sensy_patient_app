@@ -39,7 +39,7 @@ dependencies:
   firebase_auth: ^5.5.0
   
   # for bluetooth functionality and for being able to launch a URL from the app
-  flutter_blue: ^0.8.0
+  flutter_blue_plus: ^1.35.3
   url_launcher: ^6.0.20
 dev_dependencies:
   flutter_test:

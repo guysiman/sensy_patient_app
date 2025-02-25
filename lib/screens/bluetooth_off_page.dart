@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BluetoothOffPage extends StatefulWidget {
@@ -10,7 +10,7 @@ class BluetoothOffPage extends StatefulWidget {
 }
 
 class _BluetoothOffPageState extends State<BluetoothOffPage> {
-  FlutterBlue flutterBlue = FlutterBlue.instance;
+  FlutterBluePlus flutterBlue = FlutterBluePlus();
 
   @override
   void initState() {
@@ -19,7 +19,15 @@ class _BluetoothOffPageState extends State<BluetoothOffPage> {
   }
 
   Future<void> _checkBluetoothState() async {
-    bool isBluetoothOn = await flutterBlue.isOn;
+    bool isBluetoothOn = false;
+    var subscription =
+        FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
+      if (state == BluetoothAdapterState.on) {
+        isBluetoothOn = true;
+      } else {
+        isBluetoothOn = false;
+      }
+    });
     if (isBluetoothOn) {
       // ignore: use_build_context_synchronously
       Navigator.pushNamed(context, '/devicepairingpage');

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 /*
 TO DO
@@ -16,7 +16,7 @@ class BluetoothPage extends StatefulWidget {
 }
 
 class _BluetoothPageState extends State<BluetoothPage> {
-  FlutterBlue flutterBlue = FlutterBlue.instance;
+  FlutterBluePlus flutterBlue = FlutterBluePlus();
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
   }
 
   Future<void> _startScanning() async {
-    flutterBlue.startScan(timeout: Duration(seconds: 4));
+    await FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
   }
 
   List<String> devices = [
@@ -120,9 +120,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
                     ?.copyWith(color: Color(0xFF9CB1B7)),
               ),
               SizedBox(height: 16),
-
               // Example device buttons
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: devices
@@ -131,9 +129,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
                     )
                     .toList(),
               ),
-
               SizedBox(height: 118),
-
               // Instructions Section
               Align(
                 alignment: Alignment.centerLeft,
@@ -143,7 +139,6 @@ class _BluetoothPageState extends State<BluetoothPage> {
                 ),
               ),
               SizedBox(height: 12),
-
               _buildInstructions(deviceType),
             ],
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class DevicePairingPage extends StatefulWidget {
   const DevicePairingPage({super.key});
@@ -9,7 +9,7 @@ class DevicePairingPage extends StatefulWidget {
 }
 
 class _DevicePairingPageState extends State<DevicePairingPage> {
-  FlutterBlue flutterBlue = FlutterBlue.instance;
+  FlutterBluePlus flutterBlue = FlutterBluePlus();
   bool isBluetoothOn = false;
 
   @override
@@ -19,9 +19,13 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
   }
 
   Future<void> _checkBluetoothState() async {
-    bool isOn = await flutterBlue.isOn;
-    setState(() {
-      isBluetoothOn = isOn;
+    var subscription =
+        FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
+      if (state == BluetoothAdapterState.on) {
+        isBluetoothOn = true;
+      } else {
+        isBluetoothOn = false;
+      }
     });
   }
 
@@ -29,12 +33,12 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
     if (isBluetoothOn) {
       Navigator.pushNamed(context, '/bluetoothpage', arguments: deviceName);
     } else {
-      // TODO : change this to bluetooth off page, but for testing purposes
+      // TODO: change this to a Bluetooth off page; for testing, we're navigating to the same page.
       Navigator.pushNamed(context, '/bluetoothpage', arguments: deviceName);
     }
   }
 
-  Widget device(deviceName) {
+  Widget device(String deviceName) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24.0),
       child: Row(
@@ -64,28 +68,28 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24.0),
                 child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Text('Pairing',
-                            style: Theme.of(context).textTheme.titleMedium),
-                      ),
-                      device('IPG'),
-                      device('External controller'),
-                      device('External sensors')
-                    ]),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Text('Pairing',
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    device('IPG'),
+                    device('External controller'),
+                    device('External sensors'),
+                  ],
+                ),
               ),
               SizedBox(
-                  height: 44,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/homepage');
-                    },
-                    child: Text(
-                      'Go to the Home Screen',
-                    ),
-                  )),
+                height: 44,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/homepage');
+                  },
+                  child: const Text('Go to the Home Screen'),
+                ),
+              ),
             ],
           ),
         ),
