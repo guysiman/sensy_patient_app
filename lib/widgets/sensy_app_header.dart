@@ -14,15 +14,17 @@ class SensarsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bluishGreen = Color(0xFF3B626D);
-    const lightGrey = Color(0xFFF5F5F5); // Light grey background for entire header
+    const bluishGreen = Color(0xFF3A6470);
+    const lightGrey =
+        Color(0xFFE8EDEC); // Light grey background for entire header
 
     return Container(
       color: lightGrey, // Make the entire header background light grey
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             color: lightGrey,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -67,7 +69,8 @@ class SensarsHeader extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            height: 44.0, // Increased height from 32.0 to 48.0 to make it taller
+            height:
+                44.0, // Increased height from 32.0 to 48.0 to make it taller
             decoration: const BoxDecoration(
               color: lightGrey,
               border: Border(
@@ -101,7 +104,8 @@ class SensarsHeader extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTabChanged(index),
       child: Container(
-        padding: const EdgeInsets.only(bottom: 4.0), // Only add padding at bottom
+        padding:
+            const EdgeInsets.only(bottom: 4.0), // Only add padding at bottom
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
