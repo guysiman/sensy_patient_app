@@ -6,10 +6,10 @@ import 'widget_tree.dart';
 
 import 'screens/bluetooth_off_page.dart';
 import 'screens/device_pairing_page.dart';
-import 'screens/dummy_page.dart';
 import 'screens/home_page.dart';
 import 'screens/sign_in_page.dart';
 import 'screens/bluetooth_page.dart';
+import 'screens/main_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -104,7 +104,7 @@ class MyApp extends StatelessWidget {
           '/devicepairingpage': (context) => DevicePairingPage(),
           '/bluetoothpage': (context) => BluetoothPage(),
           '/bluetoothoffpage': (context) => BluetoothOffPage(),
-          '/dummypage': (context) => DummyPage(),
+          '/dummypage': (context) => MainPage(),
         });
   }
 }
