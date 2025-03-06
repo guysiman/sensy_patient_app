@@ -21,7 +21,6 @@ class _SignInPageState extends State<SignInPage> {
     try {
       await Auth().signInWithEmailAndPassword(
           email: username, password: _passwordController.text);
-      debugPrint("getting here");
     } on FirebaseAuthException catch (e) {
       setState(() {
         debugPrint(e.code);
