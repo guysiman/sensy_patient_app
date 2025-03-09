@@ -1,0 +1,2 @@
+C:/Users/jo3da/Desktop/classes/CS Project/sensy_patient_app/android/app/.cxx/Debug/3d3i2z35/x86/CMakeFiles/edit_cache.dir
+C:/Users/jo3da/Desktop/classes/CS Project/sensy_patient_app/android/app/.cxx/Debug/3d3i2z35/x86/CMakeFiles/rebuild_cache.dir

@@ -24,8 +24,68 @@ class _BluetoothPageState extends State<BluetoothPage> {
     _startScanning();
   }
 
+  BluetoothDevice? _device;
+
   Future<void> _startScanning() async {
-    await FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
+    await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+    print("-- SCAN STARTED --");
+
+    var subscription = FlutterBluePlus.scanResults.listen((results) {
+      for (ScanResult r in results) {
+        print('${r.device.advName} found! RSSI: ${r.rssi}');
+
+        // ✅ Filter for Thingy:53 and connect
+        if (r.device.advName == "Thingy:53" || r.device.advName == "Nordic_UART_Service") {  // Update if needed
+          FlutterBluePlus.stopScan();
+          print("Thingy:53 Found! Connecting...");
+          _connectToDevice(r.device);
+          break;
+        }
+      }
+    });
+
+
+
+  }
+
+  Future<void> _connectToDevice(BluetoothDevice device) async {
+    try {
+      await device.connect();
+      _device = device;
+      print("✅ Connected to ${device.advName}");
+
+      // 🔍 Discover GATT Services
+      _discoverServices(device);
+    } catch (e) {
+      print(" Connection failed: $e");
+    }
+  }
+
+  Future<void> _discoverServices(BluetoothDevice device) async {
+    List<BluetoothService> services = await device.discoverServices();
+
+    for (BluetoothService service in services) {
+      // for (BluetoothCharacteristic characteristic in service.characteristics) {
+      //   if (characteristic.properties.notify) {
+      //     await characteristic.setNotifyValue(true);
+      //     characteristic.value.listen((value) {
+      //       print("Data Received: $value");
+      //     });
+      //   }
+      // }
+
+      // READ DEVICE DATA
+      // Reads all characteristics
+      var characteristics = service.characteristics;
+      for(BluetoothCharacteristic c in characteristics) {
+        if (c.properties.read) {
+          List<int> value = await c.read();
+          print(value);
+        }
+      }
+    }
+
+
   }
 
   List<String> devices = [
