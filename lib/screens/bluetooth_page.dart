@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/bluetooth_provider.dart';
 
 /*
 TO DO
@@ -24,35 +27,43 @@ class _BluetoothPageState extends State<BluetoothPage> {
     _startScanning();
   }
 
-  BluetoothDevice? _device;
-
   Future<void> _startScanning() async {
+    setState(() {
+      devices.clear(); // Clear the list before scanning starts
+    });
+
     await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
     print("-- SCAN STARTED --");
 
-    var subscription = FlutterBluePlus.scanResults.listen((results) {
-      for (ScanResult r in results) {
-        print('${r.device.advName} found! RSSI: ${r.rssi}');
-
-        // ✅ Filter for Thingy:53 and connect
-        if (r.device.advName == "Thingy:53" || r.device.advName == "Nordic_UART_Service") {  // Update if needed
-          FlutterBluePlus.stopScan();
-          print("Thingy:53 Found! Connecting...");
-          _connectToDevice(r.device);
-          break;
+    FlutterBluePlus.scanResults.listen((results) {
+      setState(() {
+        for (ScanResult r in results) {
+          if (r.device.advName.isNotEmpty &&
+              r.device.advName.length > 1 &&
+              !devices.contains(r.device)) {
+            devices.add(r.device);
+          }
         }
-      }
+      });
     });
-
-
-
   }
 
-  Future<void> _connectToDevice(BluetoothDevice device) async {
+  Future<void> _connectToDevice(
+      BluetoothDevice device, String deviceType) async {
+    switch (deviceType.toLowerCase()) {
+      case 'ipg':
+        context.read<BluetoothProvider>().setIPG(device);
+      case 'external controller':
+        context.read<BluetoothProvider>().setEC(device);
+      case 'external sensors':
+        context.read<BluetoothProvider>().setSensors(device);
+      default:
+    }
     try {
-      await device.connect();
-      _device = device;
+      await device.connect(autoConnect: true);
       print("✅ Connected to ${device.advName}");
+
+      //context.read<BluetoothProvider>().setIPG(device);
 
       // 🔍 Discover GATT Services
       _discoverServices(device);
@@ -77,23 +88,16 @@ class _BluetoothPageState extends State<BluetoothPage> {
       // READ DEVICE DATA
       // Reads all characteristics
       var characteristics = service.characteristics;
-      for(BluetoothCharacteristic c in characteristics) {
+      for (BluetoothCharacteristic c in characteristics) {
         if (c.properties.read) {
           List<int> value = await c.read();
           print(value);
         }
       }
     }
-
-
   }
 
-  List<String> devices = [
-    'IPG 3452fg5',
-    'AirPods - Eugene',
-    'Column-23',
-    'JBL-Go'
-  ];
+  List<BluetoothDevice> devices = [];
 
   String _getTitle(String deviceType) {
     switch (deviceType.toLowerCase()) {
@@ -185,7 +189,8 @@ class _BluetoothPageState extends State<BluetoothPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: devices
                     .map(
-                      (deviceName) => _buildDeviceButton(deviceName),
+                      (deviceName) =>
+                          _buildDeviceButton(deviceName, deviceType),
                     )
                     .toList(),
               ),
@@ -207,7 +212,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
     );
   }
 
-  Widget _buildDeviceButton(String deviceName) {
+  Widget _buildDeviceButton(BluetoothDevice device, String deviceType) {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -217,12 +222,31 @@ class _BluetoothPageState extends State<BluetoothPage> {
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         title: Text(
-          deviceName,
+          device.advName,
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         trailing: TextButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/dummypage');
+          onPressed: () async {
+            // ✅ Filter for Thingy:53 and connect
+            if (device.advName == "Thingy:53" ||
+                device.advName == "Nordic_UART_Service" ||
+                device.advName == "[TV] Samsung TU7000 60 TV") {
+              // Update if needed
+              FlutterBluePlus.stopScan();
+              print("Thingy:53 Found! Connecting...");
+              await _connectToDevice(device, deviceType);
+              Navigator.pushNamed(context, '/devicepairingpage');
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'This is not the correct device. Please select a Thingy:53 or Nordic_UART_Service.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           child: Text(
             'Connect',

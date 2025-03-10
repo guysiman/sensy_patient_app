@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:app_settings/app_settings.dart';
 
 class BluetoothOffPage extends StatefulWidget {
   const BluetoothOffPage({super.key});
@@ -15,32 +15,22 @@ class _BluetoothOffPageState extends State<BluetoothOffPage> {
   @override
   void initState() {
     super.initState();
-    _checkBluetoothState();
+    _listenToBluetoothState();
   }
 
-  Future<void> _checkBluetoothState() async {
-    bool isBluetoothOn = false;
-    var subscription =
-        FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
+  void _listenToBluetoothState() {
+    FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
       if (state == BluetoothAdapterState.on) {
-        isBluetoothOn = true;
-      } else {
-        isBluetoothOn = false;
+        // Navigate to the device pairing page when Bluetooth is turned on
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/devicepairingpage');
+        }
       }
     });
-    if (isBluetoothOn) {
-      // ignore: use_build_context_synchronously
-      Navigator.pushNamed(context, '/devicepairingpage');
-    }
   }
 
   Future<void> _openBluetoothSettings() async {
-    Uri url = Uri.parse('app-settings:bluetooth');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      throw 'Could not open Bluetooth settings.';
-    }
+    AppSettings.openAppSettings(type: AppSettingsType.bluetooth);
   }
 
   String _getTitle(String deviceType) {

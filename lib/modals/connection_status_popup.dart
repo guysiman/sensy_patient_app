@@ -186,16 +186,18 @@ class _ConnectionStatusPopupState extends State<_ConnectionStatusPopup>
         children: [
           Text(label, style: Theme.of(context).textTheme.bodyMedium),
           SizedBox(width: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.normal,
-              color: isGreen
-                  ? Colors.green
-                  : isRed
-                      ? Colors.red
-                      : Colors.black,
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+                color: isGreen
+                    ? Colors.green
+                    : isRed
+                        ? Colors.red
+                        : Colors.black,
+              ),
             ),
           ),
         ],

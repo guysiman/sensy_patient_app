@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
+import 'providers/bluetooth_provider.dart';
 import 'widget_tree.dart';
 
 import 'screens/bluetooth_off_page.dart';
@@ -16,7 +18,10 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+        create: (context) => BluetoothProvider(), child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -104,7 +109,7 @@ class MyApp extends StatelessWidget {
           '/devicepairingpage': (context) => DevicePairingPage(),
           '/bluetoothpage': (context) => BluetoothPage(),
           '/bluetoothoffpage': (context) => BluetoothOffPage(),
-          '/dummypage': (context) => MainPage(),
+          '/mainpage': (context) => MainPage(),
         });
   }
 }
