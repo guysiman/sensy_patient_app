@@ -19,30 +19,32 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Center(
-                child: Text('Home Page',
-                    style: Theme.of(context).textTheme.titleMedium)),
-            ElevatedButton(
-              child: const Text("Pairing"),
-              onPressed: () {
-                Navigator.pushNamed(context, '/devicepairingpage');
-              },
-            ),
-            Container(
-              alignment: Alignment.bottomRight,
-              child: ElevatedButton(
-                child: const Text("Logout"),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Center(
+                  child: Text('Home Page',
+                      style: Theme.of(context).textTheme.titleMedium)),
+              ElevatedButton(
+                child: const Text("Pairing"),
                 onPressed: () {
-                  signOut();
+                  Navigator.pushNamed(context, '/devicepairingpage');
                 },
               ),
-            ),
-          ],
+              Container(
+                alignment: Alignment.bottomRight,
+                child: ElevatedButton(
+                  child: const Text("Logout"),
+                  onPressed: () {
+                    signOut();
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

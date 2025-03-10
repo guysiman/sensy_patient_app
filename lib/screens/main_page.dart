@@ -70,20 +70,4 @@ class _MainPageState extends State<MainPage> {
       );
     }
   }
-
-  Widget _buildConnectionItem(String name, bool isConnected) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Icon(
-            isConnected ? Icons.check_circle : Icons.error,
-            color: isConnected ? Colors.green : Colors.red,
-          ),
-          SizedBox(width: 8.0),
-          Text('$name: ${isConnected ? 'Connected' : 'Disconnected'}'),
-        ],
-      ),
-    );
-  }
 }
