@@ -79,7 +79,7 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void _onForgotPassword() {
-    debugPrint('Forgot password tapped');
+    Navigator.pushNamed(context, '/forgotpwpage');
   }
 
   void _onSignUp() {

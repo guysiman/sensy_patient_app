@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:sensy_patient_app/screens/forgot_password_page.dart';
 import 'firebase_options.dart';
 
 import 'providers/bluetooth_provider.dart';
@@ -105,6 +106,7 @@ class MyApp extends StatelessWidget {
         home: const WidgetTree(),
         routes: {
           '/signinpage': (context) => SignInPage(),
+          '/forgotpwpage': (context) => ForgotPasswordPage(),
           '/homepage': (context) => HomePage(),
           '/devicepairingpage': (context) => DevicePairingPage(),
           '/bluetoothpage': (context) => BluetoothPage(),
