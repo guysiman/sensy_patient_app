@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/sensy_app_header.dart'; // Import the header we just created
 import '../modals/connection_status_popup.dart';
-import 'Foot_Selection_Screen.dart';
 import 'Session_screen.dart';
+import 'foot_selection_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);

@@ -12,29 +12,42 @@ class FootMappingScreen extends StatefulWidget {
 }
 
 class _FootMappingScreenState extends State<FootMappingScreen> {
-  bool isLeftFoot = true;
+  final GlobalKey<_FootSelectionWidgetState> _leftFootKey =
+      GlobalKey<_FootSelectionWidgetState>();
+  final GlobalKey<_FootSelectionWidgetState> _rightFootKey =
+      GlobalKey<_FootSelectionWidgetState>();
 
-  /// Track which foot-area IDs are selected (e.g., ["F0", "F2"]).
-  List<String> _selectedAreas = [];
+  bool isLeftFoot = false; // Track which foot is currently displayed
 
-  List<String> get selectedAreas => _selectedAreas;
+  Map<String, List<String>> _selectedAreas = {
+    'left': [],
+    'right': [],
+  };
 
-  set selectedAreas(List<String> value) {
+  Map<String, List<String>> get selectedAreas => _selectedAreas;
+
+  void toggleFoot() {
     setState(() {
-      _selectedAreas = value;
+      isLeftFoot = !isLeftFoot;
     });
   }
 
-  // Create a global key for the foot widget to access its state
-  final GlobalKey<_FootSelectionWidgetState> _footWidgetKey =
-      GlobalKey<_FootSelectionWidgetState>();
+  void updateSelection(List<String> newSelection) {
+    setState(() {
+      _selectedAreas[isLeftFoot ? 'left' : 'right'] = newSelection;
+    });
+  }
 
   void clearAllSelections() {
     setState(() {
-      _selectedAreas = [];
+      _selectedAreas['left'] = [];
+      _selectedAreas['right'] = [];
     });
-    // Clear selection in the foot widget
-    _footWidgetKey.currentState?.clearSelection();
+    if (isLeftFoot) {
+      _leftFootKey.currentState?.clearSelection();
+    } else {
+      _rightFootKey.currentState?.clearSelection();
+    }
   }
 
   @override
@@ -72,11 +85,12 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
             child: Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton(
-                onPressed: _selectedAreas.isNotEmpty
-                    ? () {
-                        clearAllSelections();
-                      }
-                    : null,
+                onPressed:
+                    _selectedAreas[isLeftFoot ? 'left' : 'right']!.isNotEmpty
+                        ? () {
+                            clearAllSelections();
+                          }
+                        : null,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -147,10 +161,13 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
                       ],
                     ),
                     child: FootSelectionWidget(
-                      key: _footWidgetKey,
+                      initialSelection:
+                          _selectedAreas[isLeftFoot ? 'left' : 'right']!,
+                      key: isLeftFoot ? _leftFootKey : _rightFootKey,
                       onSelectionChanged: (List<String> newSelection) {
                         setState(() {
-                          _selectedAreas = newSelection;
+                          _selectedAreas[isLeftFoot ? 'left' : 'right'] =
+                              newSelection;
                         });
                       },
                     ),
@@ -161,50 +178,27 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
           ),
 
           // Foot pagination
-          Container(
-            padding:
-                const EdgeInsets.symmetric(vertical: 18.0), // Slightly larger
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 36, // Slightly larger
-                  height: 36, // Slightly larger
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECF0F1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_left,
-                    color: Colors.grey,
-                    size: 22, // Slightly larger
-                  ),
-                ),
-                const SizedBox(width: 22), // Slightly larger
-                Text(
-                  "Right foot 1 / 2",
-                  style: TextStyle(
-                    color: const Color(0xFF5E8D9B),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left,
+                    color: isLeftFoot ? Color(0xFF3A6470) : Colors.grey),
+                onPressed: isLeftFoot ? toggleFoot : null,
+              ),
+              Text(
+                isLeftFoot ? "Left foot 2 / 2" : "Right foot 1 / 2",
+                style: TextStyle(
+                    color: Color(0xFF5E8D9B),
                     fontWeight: FontWeight.w500,
-                    fontSize: 17, // Slightly larger
-                  ),
-                ),
-                const SizedBox(width: 22), // Slightly larger
-                Container(
-                  width: 36, // Slightly larger
-                  height: 36, // Slightly larger
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECF0F1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey,
-                    size: 22, // Slightly larger
-                  ),
-                ),
-              ],
-            ),
+                    fontSize: 17),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right,
+                    color: !isLeftFoot ? Color(0xFF3A6470) : Colors.grey),
+                onPressed: !isLeftFoot ? toggleFoot : null,
+              ),
+            ],
           ),
 
           // Confirmation button
@@ -219,7 +213,10 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
                 ),
                 padding: EdgeInsets.symmetric(vertical: 18), // Slightly larger
               ),
-              onPressed: _selectedAreas.isNotEmpty ? widget.onContinue : null,
+              onPressed: (selectedAreas['left']!.isNotEmpty ||
+                      selectedAreas['right']!.isNotEmpty)
+                  ? widget.onContinue
+                  : null,
               child: Text(
                 "I have inserted all locations where I feel pain",
                 style: Theme.of(context)
