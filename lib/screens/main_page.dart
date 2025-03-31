@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/sensy_app_header.dart'; // Import the header we just created
 import '../modals/connection_status_popup.dart';
-import 'Session_screen.dart';
+import 'session_page.dart';
 import 'foot_selection_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -45,7 +45,13 @@ class _MainPageState extends State<MainPage> {
     // This is where each tab's content would go
     if (_selectedTabIndex == 0) {
       return _isSessionScreen
-          ? SessionScreen()
+          ? SessionScreen(
+              onContinue: () {
+                setState(() {
+                  _isSessionScreen = false; // Switch to session screen
+                });
+              },
+            )
           : FootMappingScreen(
               onContinue: () {
                 setState(() {
