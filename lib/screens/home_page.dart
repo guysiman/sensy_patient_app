@@ -35,11 +35,11 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               ElevatedButton(
-              child: const Text("Mapping"),
-              onPressed: () {
-                Navigator.pushNamed(context, '/footselectionscreen');
-              },
-            ),
+                child: const Text("Mapping"),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/mainpage');
+                },
+              ),
               Container(
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
