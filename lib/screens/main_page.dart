@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sensy_patient_app/screens/walking_mode.dart';
 import '../widgets/sensy_app_header.dart'; // Import the header we just created
 import '../modals/connection_status_popup.dart';
 import 'session_page.dart';
@@ -60,19 +61,7 @@ class _MainPageState extends State<MainPage> {
               },
             );
     } else {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.directions_walk, size: 64, color: Color(0xFF2C5364)),
-            SizedBox(height: 16),
-            Text(
-              'Walking Mode Content',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      );
+      return WalkingModeScreen();
     }
   }
 }

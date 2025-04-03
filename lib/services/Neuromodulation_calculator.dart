@@ -11,14 +11,14 @@ class NeuromodulationCalculator {
   // Biomimetic frequency modulation for forefoot (SAI and FAI)
   static Map<String, double> frequencyModulationForefoot(double pressure) {
     return {
-      'sai': 30 * pressure + 5,       // SAI (sustained pressure)
-      'fai': 100 * pow(pressure, 2),   // FAI (dynamic pressure)
+      'sai': 30 * pressure + 5, // SAI (sustained pressure)
+      'fai': 100 * pow(pressure, 2).toDouble(), // FAI (dynamic pressure)
     };
   }
 
   // Biomimetic frequency modulation for midfoot (SAII)
   static double frequencyModulationMidfoot(double pressure) {
-    return 15 * sqrt(pressure) + 2;    // SAII (midfoot)
+    return 15 * sqrt(pressure) + 2; // SAII (midfoot)
   }
 
   // Biomimetic frequency modulation for heel (FAII)
@@ -39,13 +39,8 @@ class NeuromodulationCalculator {
   }
 
   // Simulate pressure profile (linear growth, plateau, linear decrease)
-  static double simulatePressureProfile(
-    double time, 
-    double incStart, 
-    double incEnd, 
-    double plateauEnd, 
-    double decEnd
-  ) {
+  static double simulatePressureProfile(double time, double incStart,
+      double incEnd, double plateauEnd, double decEnd) {
     if (time >= incStart && time <= incEnd) {
       // Linear increase
       return (time - incStart) / (incEnd - incStart);
@@ -60,7 +55,4 @@ class NeuromodulationCalculator {
       return 0.0;
     }
   }
-
-  
-
 }
