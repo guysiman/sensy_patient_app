@@ -21,4 +21,21 @@ class DatabaseService {
       return null;
     }
   }
+  Future<String?> getElectrodeMappingByUsername(String username) async {
+  try {
+    QuerySnapshot snapshot = await userCollection
+        .where('username', isEqualTo: username)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      return null;
+    } else {
+      return snapshot.docs.first['electrode_mapping'];
+    }
+  } catch (e) {
+    print('Error fetching electrode mapping: $e');
+    return null;
+  }
+}
+
 }

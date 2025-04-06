@@ -1,4 +1,6 @@
 import 'dart:math';
+import '../services/auth.dart';
+import '../services/database.dart';
 
 class NeuromodulationCalculator {
   // Constants for amplitude ranges
@@ -8,22 +10,32 @@ class NeuromodulationCalculator {
   static const double fMax = 200.0;
   static const double pContact = 0.2;
 
-  // Biomimetic frequency modulation for forefoot (SAI and FAI)
-  static Map<String, double> frequencyModulationForefoot(double pressure) {
-    return {
-      'sai': 30 * pressure + 5, // SAI (sustained pressure)
-      'fai': 100 * pow(pressure, 2).toDouble(), // FAI (dynamic pressure)
-    };
+  // Retrieve patient electrode mapping
+  static Future<String?> getPatientElectrodeMapping(String username) async {
+    DatabaseService db = DatabaseService();
+    String? electrodeMapping = await db.getElectrodeMappingByUsername(username);
+    return electrodeMapping;
   }
 
-  // Biomimetic frequency modulation for midfoot (SAII)
-  static double frequencyModulationMidfoot(double pressure) {
-    return 15 * sqrt(pressure) + 2; // SAII (midfoot)
-  }
-
-  // Biomimetic frequency modulation for heel (FAII)
-  static double frequencyModulationHeel(double pressure) {
-    return 200 * exp(2 * pressure) - 200; // FAII (heel)
+  // Biomimetic frequency modulation
+  static Map<String, double> frequencyModulation(String footZone, double pressure) {
+    switch (footZone) {
+      case 'forefoot':
+        return {
+          'sai': 30 * pressure + 5,  // SAI response
+          'fai': 100 * pow(pressure, 2).toDouble()  // FAI response
+        };
+      case 'midfoot':
+        return {
+          'saii': 15 * sqrt(pressure) + 2  // SAII response
+        };
+      case 'heel':
+        return {
+          'faii': 200 * exp(2 * pressure) - 200  // FAII response
+        };
+      default:
+        return {};
+    }
   }
 
   // Hybrid amplitude modulation
@@ -38,21 +50,37 @@ class NeuromodulationCalculator {
     return aMin + (aMax - aMin) * ((pressure - pContact) / (1 - pContact));
   }
 
-  // Simulate pressure profile (linear growth, plateau, linear decrease)
-  static double simulatePressureProfile(double time, double incStart,
-      double incEnd, double plateauEnd, double decEnd) {
+  // Pressure profile simulation
+  static double simulatePressureProfile(double time, double incStart, double incEnd, double plateauEnd, double decEnd) {
     if (time >= incStart && time <= incEnd) {
-      // Linear increase
-      return (time - incStart) / (incEnd - incStart);
+      return (time - incStart) / (incEnd - incStart);  // Linear increase
     } else if (time > incEnd && time <= plateauEnd) {
-      // Plateau
-      return 1.0;
+      return 1.0;  // Plateau
     } else if (time > plateauEnd && time <= decEnd) {
-      // Linear decrease
-      return 1.0 - (time - plateauEnd) / (decEnd - plateauEnd);
+      return 1.0 - (time - plateauEnd) / (decEnd - plateauEnd);  // Linear decrease
     } else {
-      // No pressure
       return 0.0;
     }
+  }
+
+  // Calculate neuromodulation response
+  static Future<Map<String, dynamic>> calculateModulation(String username, double pressure) async {
+    String? electrodeMapping = await getPatientElectrodeMapping(username);
+    if (electrodeMapping == null) {
+      return {'error': 'Electrode mapping not found for user'};
+    }
+
+    Map<String, double> frequency = frequencyModulation(electrodeMapping, pressure);
+    Map<String, double> result = {};
+
+    frequency.forEach((key, value) {
+      result[key] = hybridAmplitude(pressure, value);
+    });
+
+    return {
+      'electrode': electrodeMapping,
+      'frequency': frequency,
+      'amplitude': result
+    };
   }
 }
