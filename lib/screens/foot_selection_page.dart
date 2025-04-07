@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// A screen that displays an interactive foot diagram with 16 tappable areas
-/// to match the design shown in the image.
 class FootMappingScreen extends StatefulWidget {
   final VoidCallback onContinue;
   const FootMappingScreen({Key? key, required this.onContinue})

@@ -1,7 +1,136 @@
 import 'package:flutter/material.dart';
 
-/// A screen that displays the walking mode options with paradigm selection.
-/// This screen follows the design shown in Image 1.
+class SensorsCalibrationScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF5F5F5),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios,
+              color: Color(0xFF5E8D9B), size: 18),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'SENSARS',
+          style: TextStyle(
+            color: Color(0xFF5E8D9B),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          TextButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.info_outline,
+                color: Color(0xFF5E8D9B), size: 16),
+            label: const Text(
+              'Connection status',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Pressure sensors in the insole',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildCalibrateButton('Calibrate'),
+            const SizedBox(height: 8),
+            _buildResetButton('Reset sensors'),
+            const SizedBox(height: 24),
+            const Text(
+              'Ankle IMU',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildCalibrateButton('Calibrate'),
+            const SizedBox(height: 8),
+            _buildResetButton('Reset sensors'),
+            const SizedBox(height: 24),
+            const Text(
+              'Knee IMU',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildCalibrateButton('Calibrate'),
+            const SizedBox(height: 8),
+            _buildResetButton('Reset sensors'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalibrateButton(String text) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {},
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF5E8D9B),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        child: Text(text),
+      ),
+    );
+  }
+
+  Widget _buildResetButton(String text) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF5E8D9B),
+          side: const BorderSide(color: Color(0xFFE0E0E0)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.refresh, size: 16),
+            const SizedBox(width: 8),
+            Text(text),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class WalkingModeScreen extends StatefulWidget {
   const WalkingModeScreen({Key? key}) : super(key: key);
 
@@ -11,7 +140,10 @@ class WalkingModeScreen extends StatefulWidget {
 
 class _WalkingModeScreenState extends State<WalkingModeScreen> {
   // Track which paradigm is selected
-  String _selectedParadigm = 'Standard';
+  String _selectedParadigm = 'Mode 1';
+
+  // Track if session is active (for Start/Stop button)
+  bool _isSessionActive = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,15 +179,15 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
             child: Column(
               children: [
                 // Standard paradigm
-                _buildParadigmOption("Standard", horizontalPadding),
+                _buildParadigmOption("Mode 1", horizontalPadding),
                 SizedBox(height: 10),
 
                 // Advanced paradigm
-                _buildParadigmOption("Advanced", horizontalPadding),
+                _buildParadigmOption("Mode 2", horizontalPadding),
                 SizedBox(height: 10),
 
                 // Hybrid paradigm
-                _buildParadigmOption("Hybrid", horizontalPadding),
+                _buildParadigmOption("Mode 3", horizontalPadding),
               ],
             ),
           ),
@@ -63,7 +195,8 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
           // Spacer to push the Start button down
           SizedBox(
               height: 40), //puts the start button right below the paradigms
-          // Start button
+
+          // Start/Stop button
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: horizontalPadding,
@@ -71,8 +204,9 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
             ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFF4CAF50), // Green color from the image
+                backgroundColor: _isSessionActive
+                    ? const Color(0xFFE53935) // Red for Stop
+                    : const Color(0xFF4CAF50), // Green for Start
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -81,16 +215,31 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
               onPressed: () {
-                // Navigate to the session screen or start the session
-                Navigator.of(context).pushNamed('/sessionscreen');
+                setState(() {
+                  // Toggle session active state
+                  _isSessionActive = !_isSessionActive;
+                });
+
+                if (_isSessionActive) {
+                  // Session started
+                  // Navigate to the session screen or start the session
+                  // Navigator.of(context).pushNamed('/sessionscreen');
+                } else {
+                  // Session stopped
+                  // Handle stop functionality
+                }
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.play_circle_outline, size: 20),
+                  Icon(
+                      _isSessionActive
+                          ? Icons.stop_circle_outlined
+                          : Icons.play_circle_outline,
+                      size: 20),
                   SizedBox(width: 8),
                   Text(
-                    "Start",
+                    _isSessionActive ? "Stop" : "Start",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -111,7 +260,7 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
             ),
             child: Column(
               children: [
-                _buildBottomButton("Change intensities"),
+                _buildBottomButton("Boost"),
                 SizedBox(height: 10),
                 _buildBottomButton("Calibrate sensors"),
               ],
@@ -169,11 +318,28 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
       width: double.infinity,
       child: OutlinedButton(
         onPressed: () {
-          // Handle button press
+          // Only handle button press if session is active (in stop mode)
+          if (_isSessionActive) {
+            if (label == "Calibrate sensors") {
+              // Navigate to the sensors calibration page
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SensorsCalibrationScreen(),
+                ),
+              );
+            } else if (label == "Change intensities") {
+              // Handle change intensities
+            }
+          }
         },
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.grey,
-          side: BorderSide(color: Colors.grey.shade300),
+          foregroundColor:
+              _isSessionActive ? const Color(0xFF5E8D9B) : Colors.grey,
+          side: BorderSide(
+            color: _isSessionActive
+                ? const Color(0xFF5E8D9B)
+                : Colors.grey.shade300,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
           ),
@@ -182,7 +348,8 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.grey[400],
+            color:
+                _isSessionActive ? const Color(0xFF5E8D9B) : Colors.grey[400],
             fontSize: 16,
           ),
         ),
