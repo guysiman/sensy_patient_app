@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+// Import the NeuromodulationCalculator
+import '../services/neuromodulation_calculator.dart';
+import '../services/database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SessionScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -19,15 +23,136 @@ class _SessionScreenState extends State<SessionScreen> {
   bool isRunning = false;
   int remainingSeconds = 0;
   Timer? sessionTimer;
+  Timer? stimulationTimer;
 
   // Paradigm selection variables
   String selectedParadigm = "Standard";
   bool setParadigmAsDefault = false;
 
+  // Neuromodulation variables
+  Map<String, dynamic>? modulationResults;
+  double currentPressure = 0.0;
+  String? currentUsername;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      // Get the current user directly from FirebaseAuth
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        setState(() {
+          currentUsername = user.email;
+        });
+        print('Current user email: $currentUsername');
+      } else {
+        print('No user is signed in');
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
+
   @override
   void dispose() {
     sessionTimer?.cancel();
+    stimulationTimer?.cancel();
     super.dispose();
+  }
+
+  // Update stimulation based on the current pressure and paradigm
+  Future<void> updateStimulation(double pressure) async {
+    if (currentUsername == null) return;
+
+    try {
+      // Convert foot location to a zone for the calculator
+      String footZone = _getFootZoneFromLocation();
+
+      // Calculate the modulation based on selected paradigm
+      if (selectedParadigm == "Standard") {
+        // Simple linear amplitude modulation based on intensity level
+        double normalizedIntensity =
+            intensityLevel / 4.0; // Convert 0-4 to 0.0-1.0
+        currentPressure = normalizedIntensity * pressure;
+        // Use linear amplitude for standard paradigm
+        double amplitude =
+            NeuromodulationCalculator.linearAmplitude(currentPressure);
+        setState(() {
+          modulationResults = {
+            'amplitude': {'standard': amplitude},
+            'electrode': footZone,
+            'pressure': currentPressure
+          };
+        });
+      } else {
+        // For Advanced or Hybrid paradigms, use the full calculator
+        double adjustedPressure = (intensityLevel / 4.0) * pressure;
+        currentPressure = adjustedPressure;
+
+        // Use database service directly to get electrode mapping
+        DatabaseService db = DatabaseService();
+        String? electrodeMapping =
+            await db.getElectrodeMappingByUsername(currentUsername!);
+
+        if (electrodeMapping != null) {
+          // Use frequency modulation from the calculator
+          Map<String, double> frequency =
+              NeuromodulationCalculator.frequencyModulation(
+                  electrodeMapping, adjustedPressure);
+
+          // Use proper amplitude calculation based on paradigm
+          Map<String, double> amplitudes = {};
+          frequency.forEach((key, value) {
+            if (selectedParadigm == "Hybrid") {
+              amplitudes[key] = NeuromodulationCalculator.hybridAmplitude(
+                  adjustedPressure, value);
+            } else {
+              // Advanced paradigm uses linear amplitude
+              amplitudes[key] =
+                  NeuromodulationCalculator.linearAmplitude(adjustedPressure);
+            }
+          });
+
+          setState(() {
+            modulationResults = {
+              'electrode': electrodeMapping,
+              'frequency': frequency,
+              'amplitude': amplitudes
+            };
+          });
+        } else {
+          print('Electrode mapping not found for user: $currentUsername');
+          // Fallback to basic calculation
+          setState(() {
+            modulationResults = {
+              'amplitude': {
+                'standard':
+                    NeuromodulationCalculator.linearAmplitude(adjustedPressure)
+              },
+              'electrode': footZone,
+              'pressure': adjustedPressure
+            };
+          });
+        }
+      }
+    } catch (e) {
+      print('Error updating stimulation: $e');
+    }
+  }
+
+  // Convert UI location to footZone for the calculator
+  String _getFootZoneFromLocation() {
+    // This is a simplified mapping, adjust as needed based on your actual zones
+    if (selectedLocation == "Right foot" || selectedLocation == "Left foot") {
+      // Default to midfoot, but ideally this would be more specific
+      return "midfoot";
+    }
+    return "midfoot"; // Default fallback
   }
 
   void startSession() {
@@ -39,7 +164,7 @@ class _SessionScreenState extends State<SessionScreen> {
           : 0; // 15 minutes in seconds
     });
 
-    // Start the timer
+    // Start the session timer
     sessionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         if (timerEnabled) {
@@ -54,6 +179,22 @@ class _SessionScreenState extends State<SessionScreen> {
         }
       });
     });
+
+    // Start the stimulation timer that simulates pressure changes and updates modulation
+    stimulationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      // Simulate pressure changes during the session
+      double sessionProgress = timerEnabled
+          ? 1.0 - (remainingSeconds / (sessionDuration.toInt() * 60))
+          : 0.5; // Default pressure for unlimited sessions
+
+      // Use the pressure profile simulation from NeuromodulationCalculator
+      double simulatedPressure =
+          NeuromodulationCalculator.simulatePressureProfile(
+              sessionProgress, 0.0, 0.2, 0.8, 1.0);
+
+      // Update stimulation based on the current paradigm and pressure
+      updateStimulation(simulatedPressure);
+    });
   }
 
   void stopSession() {
@@ -61,6 +202,10 @@ class _SessionScreenState extends State<SessionScreen> {
       isRunning = false;
       sessionTimer?.cancel();
       sessionTimer = null;
+      stimulationTimer?.cancel();
+      stimulationTimer = null;
+      modulationResults = null;
+      currentPressure = 0.0;
     });
   }
 
@@ -546,6 +691,59 @@ class _SessionScreenState extends State<SessionScreen> {
 
               SizedBox(height: 16),
 
+              // Stimulation info display
+              if (isRunning && modulationResults != null)
+                Container(
+                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Neuromodulation Info",
+                        style: TextStyle(
+                          color: const Color(0xFF3A6470),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Paradigm: $selectedParadigm",
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      Text(
+                        "Location: $selectedLocation",
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      Text(
+                        "Pressure: ${(currentPressure * 100).toStringAsFixed(1)}%",
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      if (modulationResults!.containsKey('frequency'))
+                        Text(
+                          "Frequencies: ${_formatFrequencies(modulationResults!['frequency'])}",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      if (modulationResults!.containsKey('amplitude'))
+                        Text(
+                          "Amplitudes: ${_formatAmplitudes(modulationResults!['amplitude'])}",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                    ],
+                  ),
+                ),
+
               // Start/Stop button
               ElevatedButton(
                 onPressed: () {
@@ -763,5 +961,33 @@ class _SessionScreenState extends State<SessionScreen> {
         ),
       ),
     );
+  }
+
+  // Helper function to format frequency data
+  String _formatFrequencies(Map<String, dynamic> frequencies) {
+    StringBuffer buffer = StringBuffer();
+    frequencies.forEach((key, value) {
+      buffer.write('$key: ${value.toStringAsFixed(1)}Hz, ');
+    });
+    String result = buffer.toString();
+    if (result.isNotEmpty) {
+      result = result.substring(
+          0, result.length - 2); // Remove trailing comma and space
+    }
+    return result;
+  }
+
+  // Helper function to format amplitude data
+  String _formatAmplitudes(Map<String, dynamic> amplitudes) {
+    StringBuffer buffer = StringBuffer();
+    amplitudes.forEach((key, value) {
+      buffer.write('$key: ${value.toStringAsFixed(2)}, ');
+    });
+    String result = buffer.toString();
+    if (result.isNotEmpty) {
+      result = result.substring(
+          0, result.length - 2); // Remove trailing comma and space
+    }
+    return result;
   }
 }
