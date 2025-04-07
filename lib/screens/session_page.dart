@@ -49,10 +49,7 @@ class _SessionScreenState extends State<SessionScreen> {
         setState(() {
           currentUsername = user.email;
         });
-        print('Current user email: $currentUsername');
-      } else {
-        print('No user is signed in');
-      }
+      } else {}
     } catch (e) {
       print('Error loading user data: $e');
     }
@@ -88,6 +85,7 @@ class _SessionScreenState extends State<SessionScreen> {
             'electrode': footZone,
             'pressure': currentPressure
           };
+          print(modulationResults);
         });
       } else {
         // For Advanced or Hybrid paradigms, use the full calculator
