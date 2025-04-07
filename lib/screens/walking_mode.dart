@@ -1,5 +1,269 @@
 import 'package:flutter/material.dart';
 
+class PainReliefFeedbackScreen extends StatefulWidget {
+  @override
+  _PainReliefFeedbackScreenState createState() =>
+      _PainReliefFeedbackScreenState();
+}
+
+class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
+  // Track selected emoji for each body part
+  int? _rightFootRating;
+  int? _rightCalfRating;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF5F5F5),
+        elevation: 0,
+        title: const Text(
+          'SENSARS',
+          style: TextStyle(
+            color: Color(0xFF5E8D9B),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        actions: [
+          TextButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.info_outline,
+                color: Color(0xFF5E8D9B), size: 16),
+            label: const Text(
+              'Connection status',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'How satisfied are you with the relief of pain in this session?',
+              style: TextStyle(
+                color: Color(0xFF5E8D9B),
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Right foot feedback
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7F7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Right foot',
+                    style: TextStyle(
+                      color: Color(0xFF5E8D9B),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildEmoji(
+                          '😣',
+                          0,
+                          _rightFootRating,
+                          (val) => setState(() => _rightFootRating = val),
+                          Colors.red),
+                      _buildEmoji(
+                          '😟',
+                          1,
+                          _rightFootRating,
+                          (val) => setState(() => _rightFootRating = val),
+                          Colors.orange),
+                      _buildEmoji(
+                          '😐',
+                          2,
+                          _rightFootRating,
+                          (val) => setState(() => _rightFootRating = val),
+                          Colors.yellow),
+                      _buildEmoji(
+                          '😊',
+                          3,
+                          _rightFootRating,
+                          (val) => setState(() => _rightFootRating = val),
+                          Colors.lightBlue),
+                      _buildEmoji(
+                          '😁',
+                          4,
+                          _rightFootRating,
+                          (val) => setState(() => _rightFootRating = val),
+                          Colors.green),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Right calf feedback
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7F7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Right calf',
+                    style: TextStyle(
+                      color: Color(0xFF5E8D9B),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildEmoji(
+                          '😣',
+                          0,
+                          _rightCalfRating,
+                          (val) => setState(() => _rightCalfRating = val),
+                          Colors.red),
+                      _buildEmoji(
+                          '😟',
+                          1,
+                          _rightCalfRating,
+                          (val) => setState(() => _rightCalfRating = val),
+                          Colors.orange),
+                      _buildEmoji(
+                          '😐',
+                          2,
+                          _rightCalfRating,
+                          (val) => setState(() => _rightCalfRating = val),
+                          Colors.yellow),
+                      _buildEmoji(
+                          '😊',
+                          3,
+                          _rightCalfRating,
+                          (val) => setState(() => _rightCalfRating = val),
+                          Colors.lightBlue),
+                      _buildEmoji(
+                          '😁',
+                          4,
+                          _rightCalfRating,
+                          (val) => setState(() => _rightCalfRating = val),
+                          Colors.green),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // Finish button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _rightFootRating != null && _rightCalfRating != null
+                    ? () {
+                        // Save feedback and return to main screen
+                        Navigator.of(context).pop();
+                      }
+                    : null, // Disabled if either rating is missing
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _rightFootRating != null &&
+                          _rightCalfRating != null
+                      ? const Color(
+                          0xFF5E8D9B) // Active teal color when both ratings present
+                      : const Color(0xFF96A7AB), // Inactive gray color
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Finish',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Skip button
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  // Skip feedback and return to main screen
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  'Skip',
+                  style: TextStyle(
+                    color: Color(0xFF5E8D9B),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmoji(String emoji, int value, int? currentValue,
+      Function(int) onSelect, Color color) {
+    final bool isSelected = currentValue == value;
+
+    return GestureDetector(
+      onTap: () => onSelect(value),
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            emoji,
+            style: TextStyle(fontSize: 24),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Sensors Calibration Screen that matches the design in the provided image
 class SensorsCalibrationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -178,15 +442,15 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
-                // Standard paradigm
+                // Mode 1 paradigm (formerly Standard)
                 _buildParadigmOption("Mode 1", horizontalPadding),
                 SizedBox(height: 10),
 
-                // Advanced paradigm
+                // Mode 2 paradigm (formerly Advanced)
                 _buildParadigmOption("Mode 2", horizontalPadding),
                 SizedBox(height: 10),
 
-                // Hybrid paradigm
+                // Mode 3 paradigm (formerly Hybrid)
                 _buildParadigmOption("Mode 3", horizontalPadding),
               ],
             ),
@@ -225,8 +489,12 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                   // Navigate to the session screen or start the session
                   // Navigator.of(context).pushNamed('/sessionscreen');
                 } else {
-                  // Session stopped
-                  // Handle stop functionality
+                  // Session stopped - show feedback screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => PainReliefFeedbackScreen(),
+                    ),
+                  );
                 }
               },
               child: Row(
@@ -327,8 +595,8 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                   builder: (context) => SensorsCalibrationScreen(),
                 ),
               );
-            } else if (label == "Change intensities") {
-              // Handle change intensities
+            } else if (label == "Boost") {
+              // Handle boost functionality
             }
           }
         },
