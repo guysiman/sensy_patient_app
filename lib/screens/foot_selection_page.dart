@@ -11,9 +11,9 @@ class FootMappingScreen extends StatefulWidget {
 
 class _FootMappingScreenState extends State<FootMappingScreen> {
   final GlobalKey<_FootSelectionWidgetState> _leftFootKey =
-      GlobalKey<_FootSelectionWidgetState>();
+  GlobalKey<_FootSelectionWidgetState>();
   final GlobalKey<_FootSelectionWidgetState> _rightFootKey =
-      GlobalKey<_FootSelectionWidgetState>();
+  GlobalKey<_FootSelectionWidgetState>();
 
   bool isLeftFoot = false; // Track which foot is currently displayed
 
@@ -84,11 +84,11 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
               alignment: Alignment.centerRight,
               child: OutlinedButton(
                 onPressed:
-                    _selectedAreas[isLeftFoot ? 'left' : 'right']!.isNotEmpty
-                        ? () {
-                            clearAllSelections();
-                          }
-                        : null,
+                _selectedAreas[isLeftFoot ? 'left' : 'right']!.isNotEmpty
+                    ? () {
+                  clearAllSelections();
+                }
+                    : null,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -127,7 +127,7 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
 
                   // Add a bit more space around the container
                   const paddingFactor =
-                      0.95; // 95% of the calculated size to add some space
+                  0.95; // 95% of the calculated size to add some space
 
                   if (availableWidth / availableHeight > aspectRatio) {
                     // Height constrained
@@ -149,7 +149,7 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
                         width: 1.5, // Slightly thicker border
                       ),
                       borderRadius:
-                          BorderRadius.circular(10), // Slightly larger radius
+                      BorderRadius.circular(10), // Slightly larger radius
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.05),
@@ -160,8 +160,9 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
                     ),
                     child: FootSelectionWidget(
                       initialSelection:
-                          _selectedAreas[isLeftFoot ? 'left' : 'right']!,
+                      _selectedAreas[isLeftFoot ? 'left' : 'right']!,
                       key: isLeftFoot ? _leftFootKey : _rightFootKey,
+                      isLeftFoot: isLeftFoot,
                       onSelectionChanged: (List<String> newSelection) {
                         setState(() {
                           _selectedAreas[isLeftFoot ? 'left' : 'right'] =
@@ -207,12 +208,12 @@ class _FootMappingScreenState extends State<FootMappingScreen> {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.circular(10), // Slightly larger radius
+                  BorderRadius.circular(10), // Slightly larger radius
                 ),
                 padding: EdgeInsets.symmetric(vertical: 18), // Slightly larger
               ),
               onPressed: (selectedAreas['left']!.isNotEmpty ||
-                      selectedAreas['right']!.isNotEmpty)
+                  selectedAreas['right']!.isNotEmpty)
                   ? widget.onContinue
                   : null,
               child: Text(
@@ -245,19 +246,33 @@ class _FootArea {
     required this.width,
     required this.height,
   });
+
+  _FootArea mirrored(double totalWidth) {
+    // Calculate the mirrored left position by:
+    // totalWidth - (left + width)
+    final mirroredLeft = totalWidth - (left + width);
+
+    return _FootArea(
+      id: id,
+      left: mirroredLeft,
+      top: top,
+      width: width,
+      height: height,
+    );
+  }
 }
 
-/// An interactive foot widget with 16 rectangular hotspots (F0..F15).
-/// Tapping toggles selection and highlights the area.
-/// The user never sees "F0..F15" labels, but the IDs are returned in a callback.
+
 class FootSelectionWidget extends StatefulWidget {
   final ValueChanged<List<String>> onSelectionChanged;
   final List<String> initialSelection;
+  final bool isLeftFoot;
 
   const FootSelectionWidget({
     Key? key,
     required this.onSelectionChanged,
     this.initialSelection = const [],
+    this.isLeftFoot = false,
   }) : super(key: key);
 
   @override
@@ -267,8 +282,8 @@ class FootSelectionWidget extends StatefulWidget {
 class _FootSelectionWidgetState extends State<FootSelectionWidget> {
   late List<String> _selectedAreas;
 
-  // Original foot area coordinates as requested
-  final List<_FootArea> _footAreas = const [
+  // Original foot area coordinates for the right foot
+  final List<_FootArea> _rightFootAreas = const [
     _FootArea(id: 'F0', left: 127, top: 60, width: 24, height: 13),
     _FootArea(id: 'F1', left: 127, top: 75, width: 24, height: 13),
     //
@@ -290,6 +305,9 @@ class _FootSelectionWidgetState extends State<FootSelectionWidget> {
     _FootArea(id: 'F14', left: 154, top: 268, width: 26, height: 35),
     _FootArea(id: 'F15', left: 185, top: 250, width: 18, height: 40),
   ];
+
+  // The total width used for mirroring calculations
+  static const double _totalWidth = 343;
 
   @override
   void initState() {
@@ -329,21 +347,27 @@ class _FootSelectionWidgetState extends State<FootSelectionWidget> {
         final scaleX = actualWidth / 343;
         final scaleY = actualHeight / 364;
 
+        // Generate the appropriate foot areas based on whether it's left or right foot
+        final footAreas = widget.isLeftFoot
+            ? _rightFootAreas.map((area) => area.mirrored(_totalWidth)).toList()
+            : _rightFootAreas;
+
         return Stack(
           fit: StackFit.expand,
           children: [
             // Center the foot diagram with optimal padding
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Image.asset(
-                  'assets/foot_diagram.png',
-                  fit: BoxFit.contain,
-                ),
+            Transform(
+              alignment: Alignment.center,
+              transform: widget.isLeftFoot
+                  ? Matrix4.rotationY(3.14159) // Mirror horizontally for left foot
+                  : Matrix4.identity(), // No transformation for right foot
+              child: Image.asset(
+                'assets/foot_diagram.png',
+                fit: BoxFit.contain,
               ),
             ),
             // Show all tappable areas with light pink color (visible but subtle)
-            ..._footAreas.map((area) {
+            ...footAreas.map((area) {
               // Scale each area's coordinates.
               final double left = area.left * scaleX;
               final double top = area.top * scaleY;
@@ -362,9 +386,9 @@ class _FootSelectionWidgetState extends State<FootSelectionWidget> {
                       // Areas are invisible until clicked, then show transparent blue
                       color: _selectedAreas.contains(area.id)
                           ? Colors.blue
-                              .withOpacity(0.4) // Selected: transparent blue
+                          .withOpacity(0.4) // Selected: transparent blue
                           : Colors
-                              .transparent, // Unselected: completely invisible
+                          .transparent, // Unselected: completely invisible
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
