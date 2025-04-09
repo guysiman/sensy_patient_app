@@ -32,11 +32,15 @@ class _SessionScreenState extends State<SessionScreen> {
   // Neuromodulation variables
   Map<String, dynamic>? modulationResults;
   double currentPressure = 0.0;
-  String? currentUsername;
+  String? currentUserEmail;
+
+  // Database service
+  late DatabaseService databaseService;
 
   @override
   void initState() {
     super.initState();
+    databaseService = DatabaseService();
     _loadUserData();
   }
 
@@ -47,11 +51,52 @@ class _SessionScreenState extends State<SessionScreen> {
 
       if (user != null) {
         setState(() {
-          currentUsername = user.email;
+          currentUserEmail = user.email;
         });
-      } else {}
+
+        // Load user's saved settings
+        await _loadUserSettings();
+        await _loadSessionSettings();
+      } else {
+        print('No user is currently logged in');
+      }
     } catch (e) {
       print('Error loading user data: $e');
+    }
+  }
+
+  // Load session settings specifically (intensity and paradigm)
+  Future<void> _loadSessionSettings() async {
+    if (currentUserEmail == null) return;
+
+    try {
+      Map<String, dynamic>? sessionSettings =
+          await databaseService.getSessionSettings(currentUserEmail!);
+
+      if (sessionSettings != null) {
+        setState(() {
+          intensityLevel = sessionSettings['intensity_level'] ?? 2;
+          selectedParadigm = sessionSettings['paradigm'] ?? 'Standard';
+          setParadigmAsDefault = sessionSettings['is_default'] ?? false;
+        });
+        print(
+            'Session settings loaded: intensity=$intensityLevel, paradigm=$selectedParadigm');
+      }
+    } catch (e) {
+      print('Error loading session settings: $e');
+    }
+  }
+
+  // Save session settings (intensity and paradigm)
+  Future<void> _saveSessionSettings() async {
+    if (currentUserEmail == null) return;
+
+    try {
+      await databaseService.saveSessionSettings(currentUserEmail!,
+          intensityLevel, selectedParadigm, setParadigmAsDefault);
+      print('Session settings saved successfully');
+    } catch (e) {
+      print('Error saving session settings: $e');
     }
   }
 
@@ -64,7 +109,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
   // Update stimulation based on the current pressure and paradigm
   Future<void> updateStimulation(double pressure) async {
-    if (currentUsername == null) return;
+    if (currentUserEmail == null) return;
 
     try {
       // Convert foot location to a zone for the calculator
@@ -92,10 +137,9 @@ class _SessionScreenState extends State<SessionScreen> {
         double adjustedPressure = (intensityLevel / 4.0) * pressure;
         currentPressure = adjustedPressure;
 
-        // Use database service directly to get electrode mapping
-        DatabaseService db = DatabaseService();
+        // Use database service directly to get electrode mapping using email
         String? electrodeMapping =
-            await db.getElectrodeMappingByUsername(currentUsername!);
+            await databaseService.getElectrodeMappingByEmail(currentUserEmail!);
 
         if (electrodeMapping != null) {
           // Use frequency modulation from the calculator
@@ -124,7 +168,7 @@ class _SessionScreenState extends State<SessionScreen> {
             };
           });
         } else {
-          print('Electrode mapping not found for user: $currentUsername');
+          print('Electrode mapping not found for user: $currentUserEmail');
           // Fallback to basic calculation
           setState(() {
             modulationResults = {
@@ -196,6 +240,12 @@ class _SessionScreenState extends State<SessionScreen> {
   }
 
   void stopSession() {
+    // Save the session settings when stopping
+    if (currentUserEmail != null) {
+      _saveSessionSettings();
+      _saveUserSettings(); // Save all settings
+    }
+
     setState(() {
       isRunning = false;
       sessionTimer?.cancel();
@@ -457,6 +507,12 @@ class _SessionScreenState extends State<SessionScreen> {
                         selectedParadigm = tempSelectedParadigm;
                         setParadigmAsDefault = tempSetAsDefault;
                       });
+
+                      // Save settings immediately
+                      if (currentUserEmail != null) {
+                        _saveSessionSettings();
+                      }
+
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -482,6 +538,57 @@ class _SessionScreenState extends State<SessionScreen> {
         });
       },
     );
+  }
+
+  // Save user settings to the database
+  Future<void> _saveUserSettings() async {
+    if (currentUserEmail == null) return;
+
+    try {
+      // Create a map of the user's settings
+      Map<String, dynamic> userSettings = {
+        'paradigm': selectedParadigm,
+        'intensity_level': intensityLevel,
+        'selected_location': selectedLocation,
+        'session_duration': sessionDuration,
+        'timer_enabled': timerEnabled,
+        'last_pressure': currentPressure,
+        'set_paradigm_as_default': setParadigmAsDefault,
+        'last_updated': DateTime.now().millisecondsSinceEpoch
+      };
+
+      // Save the settings to Firestore using email
+      await databaseService.saveUserSettings(currentUserEmail!, userSettings);
+      print('User settings saved successfully');
+    } catch (e) {
+      print('Error saving user settings: $e');
+    }
+  }
+
+  // Load user settings from the database
+  Future<void> _loadUserSettings() async {
+    if (currentUserEmail == null) return;
+
+    try {
+      Map<String, dynamic>? userSettings =
+          await databaseService.getUserSettings(currentUserEmail!);
+
+      if (userSettings != null) {
+        setState(() {
+          selectedParadigm = userSettings['paradigm'] ?? 'Standard';
+          intensityLevel = userSettings['intensity_level'] ?? 2;
+          selectedLocation = userSettings['selected_location'] ?? 'Right foot';
+          sessionDuration = userSettings['session_duration'] ?? 8.0;
+          timerEnabled = userSettings['timer_enabled'] ?? true;
+          setParadigmAsDefault =
+              userSettings['set_paradigm_as_default'] ?? false;
+          // No need to set currentPressure here as it will be calculated during session
+        });
+        print('User settings loaded successfully');
+      }
+    } catch (e) {
+      print('Error loading user settings: $e');
+    }
   }
 
   @override
@@ -613,6 +720,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
                     SizedBox(height: 16),
 
+                    // Session duration slider (only visible when timer is enabled)
                     // Session duration slider (only visible when timer is enabled)
                     if (timerEnabled)
                       SliderTheme(
@@ -748,6 +856,7 @@ class _SessionScreenState extends State<SessionScreen> {
                   // Toggle between Start and Stop
                   if (isRunning) {
                     stopSession();
+                    // Session settings are saved in stopSession()
                   } else {
                     startSession();
                   }
@@ -795,7 +904,13 @@ class _SessionScreenState extends State<SessionScreen> {
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          if (intensityLevel > 0) intensityLevel--;
+                          if (intensityLevel > 0) {
+                            intensityLevel--;
+                            // Save settings when intensity changes
+                            if (currentUserEmail != null) {
+                              _saveSessionSettings();
+                            }
+                          }
                         });
                       },
                       child: Container(
@@ -830,7 +945,13 @@ class _SessionScreenState extends State<SessionScreen> {
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          if (intensityLevel < 4) intensityLevel++;
+                          if (intensityLevel < 4) {
+                            intensityLevel++;
+                            // Add the if statement here
+                            if (currentUserEmail != null) {
+                              _saveSessionSettings();
+                            }
+                          }
                         });
                       },
                       child: Container(
@@ -860,6 +981,10 @@ class _SessionScreenState extends State<SessionScreen> {
                       onPressed: () {
                         setState(() {
                           selectedLocation = "Left foot";
+                          // Save settings when location changes
+                          if (currentUserEmail != null) {
+                            _saveUserSettings();
+                          }
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -897,6 +1022,10 @@ class _SessionScreenState extends State<SessionScreen> {
                       onPressed: () {
                         setState(() {
                           selectedLocation = "Right foot";
+                          // Save settings when location changes
+                          if (currentUserEmail != null) {
+                            _saveUserSettings();
+                          }
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -933,6 +1062,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
               SizedBox(height: 40),
 
+              // Bottom action buttons
               // Bottom action buttons
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),

@@ -32,6 +32,10 @@ class _MainPageState extends State<MainPage> {
               onInfoPressed: () {
                 showConnectionStatusPopup(context);
               },
+              onTitlePressed: () {
+                // Direct navigation to homepage when SENSARS text is clicked
+                Navigator.pushReplacementNamed(context, '/homepage');
+              },
             ),
             Expanded(
               child: _buildTabContent(),
@@ -47,19 +51,19 @@ class _MainPageState extends State<MainPage> {
     if (_selectedTabIndex == 0) {
       return _isSessionScreen
           ? SessionScreen(
-              onContinue: () {
-                setState(() {
-                  _isSessionScreen = false; // Switch to session screen
-                });
-              },
-            )
+        onContinue: () {
+          setState(() {
+            _isSessionScreen = false; // Switch to session screen
+          });
+        },
+      )
           : FootMappingScreen(
-              onContinue: () {
-                setState(() {
-                  _isSessionScreen = true; // Switch to session screen
-                });
-              },
-            );
+        onContinue: () {
+          setState(() {
+            _isSessionScreen = true; // Switch to session screen
+          });
+        },
+      );
     } else {
       return WalkingModeScreen();
     }

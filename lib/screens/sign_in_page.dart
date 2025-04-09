@@ -11,7 +11,7 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
   String? errorMessage = '';
@@ -19,40 +19,30 @@ class _SignInPageState extends State<SignInPage> {
   @override
   void initState() {
     super.initState();
-    _usernameController.addListener(_checkFields);
+    _emailController.addListener(_checkFields);
     _passwordController.addListener(_checkFields);
   }
 
   void _checkFields() {
     setState(() {
-      _isButtonEnabled = _usernameController.text.isNotEmpty &&
+      _isButtonEnabled = _emailController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
     });
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   void _onSignIn(BuildContext context) async {
-    String username = _usernameController.text;
+    String email = _emailController.text;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
-      if (username.contains('@')) {
-        await authProvider.signIn(username, _passwordController.text);
-      } else {
-        String? email = await DatabaseService().getEmailByUsername(username);
-        if (email == null) {
-          setState(() {
-            errorMessage = 'Invalid username';
-          });
-          return;
-        }
-        await authProvider.signIn(email, _passwordController.text);
-      }
+      // Directly use the email for authentication
+      await authProvider.signIn(email, _passwordController.text);
       Navigator.pushReplacementNamed(context, '/homepage');
     } catch (e) {
       setState(() {
@@ -80,20 +70,21 @@ class _SignInPageState extends State<SignInPage> {
                 Text('Sign in', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 40),
 
-                // Username field
+                // Email field
                 Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Username',
+                    child: Text('Email',
                         style: Theme.of(context).textTheme.bodyMedium)),
                 const SizedBox(height: 4),
                 TextField(
-                  controller: _usernameController,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: 'Enter your username',
+                    labelText: 'Enter your email',
                     labelStyle:
-                        Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).hintColor,
-                            ),
+                    Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide(color: Color(0xFFE8EDEC))),
@@ -121,9 +112,9 @@ class _SignInPageState extends State<SignInPage> {
                   decoration: InputDecoration(
                     labelText: 'Enter your password',
                     labelStyle:
-                        Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).hintColor,
-                            ),
+                    Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide(color: Color(0xFFE8EDEC))),
@@ -144,8 +135,8 @@ class _SignInPageState extends State<SignInPage> {
                   onPressed: _onForgotPassword,
                   child: Text('Forgot password?',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          )),
+                        color: Theme.of(context).colorScheme.primary,
+                      )),
                 ),
 
                 const SizedBox(height: 40),
@@ -168,8 +159,8 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     onPressed: _isButtonEnabled
                         ? () {
-                            _onSignIn(context);
-                          }
+                      _onSignIn(context);
+                    }
                         : null,
                     child: const Text('Enter account'),
                   ),
@@ -185,16 +176,16 @@ class _SignInPageState extends State<SignInPage> {
                     Text(
                       "Don't have an account? ",
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: 18,
-                          ),
+                        fontSize: 18,
+                      ),
                     ),
                     GestureDetector(
                       onTap: _onSignUp,
                       child: Text(
                         'Sign up',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ],

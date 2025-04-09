@@ -10,10 +10,10 @@ class NeuromodulationCalculator {
   static const double fMax = 200.0;
   static const double pContact = 0.2;
 
-  // Retrieve patient electrode mapping
-  static Future<String?> getPatientElectrodeMapping(String username) async {
+  // Retrieve patient electrode mapping using email
+  static Future<String?> getPatientElectrodeMapping(String email) async {
     DatabaseService db = DatabaseService();
-    String? electrodeMapping = await db.getElectrodeMappingByUsername(username);
+    String? electrodeMapping = await db.getElectrodeMappingByEmail(email);
     return electrodeMapping;
   }
 
@@ -64,8 +64,8 @@ class NeuromodulationCalculator {
   }
 
   // Calculate neuromodulation response
-  static Future<Map<String, dynamic>> calculateModulation(String username, double pressure) async {
-    String? electrodeMapping = await getPatientElectrodeMapping(username);
+  static Future<Map<String, dynamic>> calculateModulation(String email, double pressure) async {
+    String? electrodeMapping = await getPatientElectrodeMapping(email);
     if (electrodeMapping == null) {
       return {'error': 'Electrode mapping not found for user'};
     }
