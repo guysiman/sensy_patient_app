@@ -9,7 +9,7 @@ class PainReliefFeedbackScreen extends StatefulWidget {
 class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
   // Track selected emoji for each body part
   int? _rightFootRating;
-  int? _rightCalfRating;
+  int? _leftFootRating;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +118,7 @@ class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
 
             const SizedBox(height: 16),
 
-            // Right calf feedback
+            // Left Foot feedback
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -129,7 +129,7 @@ class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Right calf',
+                    'Left Foot',
                     style: TextStyle(
                       color: Color(0xFF5E8D9B),
                       fontSize: 16,
@@ -143,32 +143,32 @@ class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
                       _buildEmoji(
                           '😣',
                           0,
-                          _rightCalfRating,
-                          (val) => setState(() => _rightCalfRating = val),
+                          _leftFootRating,
+                          (val) => setState(() => _leftFootRating = val),
                           Colors.red),
                       _buildEmoji(
                           '😟',
                           1,
-                          _rightCalfRating,
-                          (val) => setState(() => _rightCalfRating = val),
+                          _leftFootRating,
+                          (val) => setState(() => _leftFootRating = val),
                           Colors.orange),
                       _buildEmoji(
                           '😐',
                           2,
-                          _rightCalfRating,
-                          (val) => setState(() => _rightCalfRating = val),
+                          _leftFootRating,
+                          (val) => setState(() => _leftFootRating = val),
                           Colors.yellow),
                       _buildEmoji(
                           '😊',
                           3,
-                          _rightCalfRating,
-                          (val) => setState(() => _rightCalfRating = val),
+                          _leftFootRating,
+                          (val) => setState(() => _leftFootRating = val),
                           Colors.lightBlue),
                       _buildEmoji(
                           '😁',
                           4,
-                          _rightCalfRating,
-                          (val) => setState(() => _rightCalfRating = val),
+                          _leftFootRating,
+                          (val) => setState(() => _leftFootRating = val),
                           Colors.green),
                     ],
                   ),
@@ -182,7 +182,7 @@ class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _rightFootRating != null && _rightCalfRating != null
+                onPressed: _rightFootRating != null && _leftFootRating != null
                     ? () {
                         // Save feedback and return to main screen
                         Navigator.of(context).pop();
@@ -190,7 +190,7 @@ class _PainReliefFeedbackScreenState extends State<PainReliefFeedbackScreen> {
                     : null, // Disabled if either rating is missing
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _rightFootRating != null &&
-                          _rightCalfRating != null
+                          _leftFootRating != null
                       ? const Color(
                           0xFF5E8D9B) // Active teal color when both ratings present
                       : const Color(0xFF96A7AB), // Inactive gray color
