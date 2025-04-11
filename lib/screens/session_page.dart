@@ -4,10 +4,17 @@ import 'dart:async';
 import '../services/neuromodulation_calculator.dart';
 import '../services/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import '../providers/bluetooth_provider.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
 class SessionScreen extends StatefulWidget {
   final VoidCallback onContinue;
-  const SessionScreen({Key? key, required this.onContinue}) : super(key: key);
+    final String deviceType;
+ const SessionScreen({
+  Key? key,
+  required this.onContinue,
+  this.deviceType = 'ipg',
+}) : super(key: key);
 
   @override
   State<SessionScreen> createState() => _SessionScreenState();
@@ -24,7 +31,7 @@ class _SessionScreenState extends State<SessionScreen> {
   int remainingSeconds = 0;
   Timer? sessionTimer;
   Timer? stimulationTimer;
-
+    String? bluetoothData;
   // Paradigm selection variables
   String selectedParadigm = "Standard";
   bool setParadigmAsDefault = false;
@@ -42,8 +49,53 @@ class _SessionScreenState extends State<SessionScreen> {
     super.initState();
     databaseService = DatabaseService();
     _loadUserData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+  final bluetoothProvider = Provider.of<BluetoothProvider>(context, listen: false);
+  BluetoothDevice? device;
+
+  switch (widget.deviceType.toLowerCase()) {
+    case 'ipg':
+      device = bluetoothProvider.IPG;
+      break;
+    case 'ec':
+      device = bluetoothProvider.EC;
+      break;
+    case 'sensors':
+      device = bluetoothProvider.sensors;
+      break;
   }
 
+  if (device != null) {
+    _readLiveData(device);
+  } else {
+    print("⚠️ No device found for type: ${widget.deviceType}");
+  }
+});
+
+  }
+   Future<void> _readLiveData(BluetoothDevice device) async {
+    try {
+      List<BluetoothService> services = await device.discoverServices();
+
+      for (BluetoothService service in services) {
+        for (BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.properties.notify) {
+            await characteristic.setNotifyValue(true);
+            characteristic.value.listen((value) {
+              String receivedData = String.fromCharCodes(value);
+              print("📡 Data Received: $receivedData");
+              setState(() {
+                bluetoothData = receivedData;
+              });
+            });
+            print("-- -- Listening for live data on ${characteristic.uuid}");
+          }
+        }
+      }
+    } catch (e) {
+      print("XX Error reading live data: $e");
+    }
+  }
   Future<void> _loadUserData() async {
     try {
       // Get the current user directly from FirebaseAuth
@@ -848,8 +900,33 @@ class _SessionScreenState extends State<SessionScreen> {
                         ),
                     ],
                   ),
+                  
+                )
+               if (bluetoothData != null) ...[
+                Container(
+                  margin: EdgeInsets.only(top: 20, bottom: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    "Bluetooth Data: $bluetoothData",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF3A6470),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-
+              ],
               // Start/Stop button
               ElevatedButton(
                 onPressed: () {
@@ -1084,6 +1161,7 @@ class _SessionScreenState extends State<SessionScreen> {
                   ],
                 ),
               ),
+              
             ],
           ),
         ),
