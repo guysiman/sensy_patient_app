@@ -3,6 +3,9 @@ import 'dart:async';
 // Import the NeuromodulationCalculator
 import '../services/neuromodulation_calculator.dart';
 import '../services/database.dart';
+import 'foot_selection_page.dart';
+import '../services/nm_test.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/bluetooth_provider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -25,7 +28,10 @@ class _SessionScreenState extends State<SessionScreen> {
   double sessionDuration = 8.0; // Default 8 minutes
   String selectedLocation = "Right foot"; // Default selected location
   int intensityLevel = 2; // Default to show 3 colored bars (indices 0, 1, 2)
-
+  final List<FootArea> rightFootAreas = const [
+  FootArea(id: 'F0', left: 127, top: 60, width: 24, height: 13, zoneType: 'forefoot'),
+  // Add more areas if needed
+];
   // Added variables for running state
   bool isRunning = false;
   int remainingSeconds = 0;
@@ -287,7 +293,23 @@ class _SessionScreenState extends State<SessionScreen> {
               sessionProgress, 0.0, 0.2, 0.8, 1.0);
 
       // Update stimulation based on the current paradigm and pressure
-      updateStimulation(simulatedPressure);
+      final area = rightFootAreas.firstWhere((a) => a.id == 'F0');
+final result = NeuromodulationLogic.computeModulation(area, sessionProgress);
+setState(() {
+  modulationResults = {
+    'pressure': result['pressure'],
+    'frequency': result['frequency'],
+    'amplitude': result['amplitude'],
+    'areaId': result['areaId'],
+    'zoneType': result['zoneType'],
+    'time': result['time'],
+    'phase': result['phase'],
+  };
+  currentPressure = result['pressure'];
+  print(result['pressure']); // should be ~0.33
+print(result['frequency']); // should contain sai and fai
+print(result['amplitude']); // should be non-zero
+});
     });
   }
 
@@ -901,7 +923,7 @@ class _SessionScreenState extends State<SessionScreen> {
                     ],
                   ),
                   
-                )
+                ),
                if (bluetoothData != null) ...[
                 Container(
                   margin: EdgeInsets.only(top: 20, bottom: 16),

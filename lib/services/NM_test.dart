@@ -146,41 +146,30 @@ class NeuromodulationLogic {
 }
 
 
+// All 16 defined foot areas with correct zone types
 const List<FootArea> rightFootAreas = [
-  FootArea(
-    id: 'F0',
-    left: 127,
-    top: 60,
-    width: 24,
-    height: 13,
-    zoneType: 'forefoot',
-  ),
-  FootArea(
-    id: 'F1',
-    left: 127,
-    top: 75,
-    width: 24,
-    height: 13,
-    zoneType: 'forefoot',
-  ),
-  FootArea(
-    id: 'F6',
-    left: 128,
-    top: 104,
-    width: 24,
-    height: 33,
-    zoneType: 'midfoot',
-  ),
-  FootArea(
-    id: 'F9',
-    left: 156,
-    top: 143,
-    width: 26,
-    height: 82,
-    zoneType: 'heel',
-  ),
-];
+  // Forefoot
+  FootArea(id: 'F0', left: 127, top: 60, width: 24, height: 13, zoneType: 'forefoot'),
+  FootArea(id: 'F1', left: 127, top: 75, width: 24, height: 13, zoneType: 'forefoot'),
+  FootArea(id: 'F2', left: 157, top: 65, width: 12, height: 10, zoneType: 'forefoot'),
+  FootArea(id: 'F3', left: 173, top: 71, width: 12, height: 9, zoneType: 'forefoot'),
+  FootArea(id: 'F4', left: 185, top: 85, width: 12, height: 9, zoneType: 'forefoot'),
+  FootArea(id: 'F5', left: 202, top: 97, width: 12, height: 9, zoneType: 'forefoot'),
+  FootArea(id: 'F6', left: 128, top: 104, width: 24, height: 33, zoneType: 'forefoot'),
+  FootArea(id: 'F7', left: 156, top: 104, width: 26, height: 33, zoneType: 'forefoot'),
+  FootArea(id: 'F8', left: 187, top: 119, width: 26, height: 20, zoneType: 'forefoot'),
 
+  // Midfoot
+  FootArea(id: 'F9', left: 156, top: 143, width: 26, height: 82, zoneType: 'midfoot'),
+  FootArea(id: 'F10', left: 185, top: 143, width: 26, height: 27, zoneType: 'midfoot'),
+  FootArea(id: 'F11', left: 185, top: 172, width: 20, height: 27, zoneType: 'midfoot'),
+  FootArea(id: 'F12', left: 185, top: 201, width: 20, height: 27, zoneType: 'midfoot'),
+
+  // Heel
+  FootArea(id: 'F13', left: 154, top: 235, width: 26, height: 30, zoneType: 'heel'),
+  FootArea(id: 'F14', left: 154, top: 268, width: 26, height: 35, zoneType: 'heel'),
+  FootArea(id: 'F15', left: 185, top: 250, width: 18, height: 40, zoneType: 'heel'),
+];
 
 void main() {
 
@@ -197,3 +186,4 @@ void main() {
   print('Frequency: ${result['frequency']}');
   print('Amplitude: ${result['amplitude']}');
 }
+
