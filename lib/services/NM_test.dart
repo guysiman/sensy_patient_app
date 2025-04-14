@@ -122,6 +122,8 @@ class NeuromodulationLogic {
 
   /// Computes the full neuromodulation result for a given foot area at a specific time.
   static Map<String, dynamic> computeModulation(FootArea area, double time) {
+   print('${area.id}');
+   print('$time');
     // Step 1: Determine current phase based on zone type and time.
     PressurePhase phase = determinePhase(area.zoneType, time);
     // Step 2: Calculate pressure based on phase.

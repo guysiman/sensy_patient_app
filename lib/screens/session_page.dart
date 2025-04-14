@@ -255,63 +255,65 @@ class _SessionScreenState extends State<SessionScreen> {
     return "midfoot"; // Default fallback
   }
 
-  void startSession() {
+
+   void startSession() {
+  setState(() {
+    isRunning = true;
+    // If timer is disabled, use 15 minutes, otherwise use the slider value
+    remainingSeconds = timerEnabled
+        ? sessionDuration.toInt() * 60
+        : 0; // 15 minutes in seconds
+  });
+
+  // Start the session timer
+  sessionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
     setState(() {
-      isRunning = true;
-      // If timer is disabled, use 15 minutes, otherwise use the slider value
-      remainingSeconds = timerEnabled
-          ? sessionDuration.toInt() * 60
-          : 0; // 15 minutes in seconds
-    });
-
-    // Start the session timer
-    sessionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (timerEnabled) {
-          if (remainingSeconds > 0) {
-            remainingSeconds--;
-          } else {
-            // Auto-stop when countdown reaches zero
-            stopSession();
-          }
+      if (timerEnabled) {
+        if (remainingSeconds > 0) {
+          remainingSeconds--;
         } else {
-          remainingSeconds++;
+          // Auto-stop when countdown reaches zero
+          stopSession();
         }
-      });
+      } else {
+        remainingSeconds++;
+      }
     });
+  });
 
-    // Start the stimulation timer that simulates pressure changes and updates modulation
-    stimulationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
-      // Simulate pressure changes during the session
-      double sessionProgress = timerEnabled
-          ? 1.0 - (remainingSeconds / (sessionDuration.toInt() * 60))
-          : 0.5; // Default pressure for unlimited sessions
+  // Time simulation: reset after 1.5 seconds and update pressure
+  double simulationTime = 0.0; // Start from 0s
+  stimulationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+    simulationTime += 0.1; // Increment time by 0.1 seconds
 
-      // Use the pressure profile simulation from NeuromodulationCalculator
-      double simulatedPressure =
-          NeuromodulationCalculator.simulatePressureProfile(
-              sessionProgress, 0.0, 0.2, 0.8, 1.0);
+    if (simulationTime >= 1.5) {
+      simulationTime = 0.0; // Reset time after 1.5 seconds
+    }
 
-      // Update stimulation based on the current paradigm and pressure
-      final area = rightFootAreas.firstWhere((a) => a.id == 'F0');
-final result = NeuromodulationLogic.computeModulation(area, sessionProgress);
-setState(() {
-  modulationResults = {
-    'pressure': result['pressure'],
-    'frequency': result['frequency'],
-    'amplitude': result['amplitude'],
-    'areaId': result['areaId'],
-    'zoneType': result['zoneType'],
-    'time': result['time'],
-    'phase': result['phase'],
-  };
-  currentPressure = result['pressure'];
-  print(result['pressure']); // should be ~0.33
-print(result['frequency']); // should contain sai and fai
-print(result['amplitude']); // should be non-zero
-});
+    final area = rightFootAreas.firstWhere((a) => a.id == 'F0');
+    Map<String, dynamic> result = NeuromodulationLogic.computeModulation(area, simulationTime);
+
+    setState(() {
+      modulationResults = {
+        'pressure': result['pressure'],
+        'frequency': result['frequency'],
+        'amplitude': result['amplitude'],
+        'areaId': result['areaId'],
+        'zoneType': result['zoneType'],
+        'time': result['time'],
+        'phase': result['phase'],
+      };
+      currentPressure = result['pressure'];
+
+      // Optionally, update chart or any other state based on these results
+      // Example:
+      // pressureData.add(FlSpot(simulationTime, currentPressure)); 
     });
-  }
+  });
+}
+
+
+  
 
   void stopSession() {
     // Save the session settings when stopping
