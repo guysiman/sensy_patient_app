@@ -38,10 +38,8 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
 
   void _checkAndNavigate() {
     final bluetoothProvider =
-    Provider.of<BluetoothProvider>(context, listen: false);
-    if (bluetoothProvider.IPG != null &&
-        bluetoothProvider.EC != null &&
-        bluetoothProvider.sensors != null) {
+        Provider.of<BluetoothProvider>(context, listen: false);
+    if (bluetoothProvider.IPG != null && bluetoothProvider.EC != null) {
       Navigator.pushReplacementNamed(context, '/mainpage');
     }
   }
@@ -88,11 +86,14 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
 
       for (BluetoothService service in services) {
         print("🔍 Service: ${service.uuid}");
-        for (BluetoothCharacteristic characteristic in service.characteristics) {
-          print("🔎 Characteristic: ${characteristic.uuid} - Properties: ${characteristic.properties}");
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          print(
+              "🔎 Characteristic: ${characteristic.uuid} - Properties: ${characteristic.properties}");
           print("🔎 Checking characteristic: ${characteristic.uuid}");
 
-          if (characteristic.properties.write && characteristic.uuid != Guid('2b29')) {
+          if (characteristic.properties.write &&
+              characteristic.uuid != Guid('2b29')) {
             List<int> bytes = data.codeUnits;
             print("✍ Writing data: $data (Bytes: $bytes)");
 
@@ -154,7 +155,8 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 24),
                   SizedBox(width: 12),
-                  Text(deviceName, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(deviceName,
+                      style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
               OutlinedButton(
@@ -241,7 +243,6 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
   Widget build(BuildContext context) {
     BluetoothDevice? IPG = context.watch<BluetoothProvider>().IPG;
     BluetoothDevice? EC = context.watch<BluetoothProvider>().EC;
-    BluetoothDevice? sensors = context.watch<BluetoothProvider>().sensors;
 
     return Scaffold(
       body: SafeArea(
@@ -263,10 +264,7 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
                       IPG != null ? connectedDevice('IPG', IPG) : device('IPG'),
                       EC != null
                           ? connectedDevice('EC', EC)
-                          : device('External controller'),
-                      sensors != null
-                          ? connectedDevice('Sensors', sensors)
-                          : device('External sensors'),
+                          : device('External controller')
                     ],
                   ),
                 ),

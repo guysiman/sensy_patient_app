@@ -10,14 +10,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/bluetooth_provider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
+
 class SessionScreen extends StatefulWidget {
   final VoidCallback onContinue;
-    final String deviceType;
- const SessionScreen({
-  Key? key,
-  required this.onContinue,
-  this.deviceType = 'ipg',
-}) : super(key: key);
+  final String deviceType;
+  const SessionScreen({
+    Key? key,
+    required this.onContinue,
+    this.deviceType = 'ipg',
+  }) : super(key: key);
 
   @override
   State<SessionScreen> createState() => _SessionScreenState();
@@ -29,15 +30,21 @@ class _SessionScreenState extends State<SessionScreen> {
   String selectedLocation = "Right foot"; // Default selected location
   int intensityLevel = 2; // Default to show 3 colored bars (indices 0, 1, 2)
   final List<FootArea> rightFootAreas = const [
-  FootArea(id: 'F0', left: 127, top: 60, width: 24, height: 13, zoneType: 'forefoot'),
-  // Add more areas if needed
-];
+    FootArea(
+        id: 'F0',
+        left: 127,
+        top: 60,
+        width: 24,
+        height: 13,
+        zoneType: 'forefoot'),
+    // Add more areas if needed
+  ];
   // Added variables for running state
   bool isRunning = false;
   int remainingSeconds = 0;
   Timer? sessionTimer;
   Timer? stimulationTimer;
-    String? bluetoothData;
+  String? bluetoothData;
   // Paradigm selection variables
   String selectedParadigm = "Standard";
   bool setParadigmAsDefault = false;
@@ -56,35 +63,34 @@ class _SessionScreenState extends State<SessionScreen> {
     databaseService = DatabaseService();
     _loadUserData();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-  final bluetoothProvider = Provider.of<BluetoothProvider>(context, listen: false);
-  BluetoothDevice? device;
+      final bluetoothProvider =
+          Provider.of<BluetoothProvider>(context, listen: false);
+      BluetoothDevice? device;
 
-  switch (widget.deviceType.toLowerCase()) {
-    case 'ipg':
-      device = bluetoothProvider.IPG;
-      break;
-    case 'ec':
-      device = bluetoothProvider.EC;
-      break;
-    case 'sensors':
-      device = bluetoothProvider.sensors;
-      break;
+      switch (widget.deviceType.toLowerCase()) {
+        case 'ipg':
+          device = bluetoothProvider.IPG;
+          break;
+        case 'ec':
+          device = bluetoothProvider.EC;
+          break;
+      }
+
+      if (device != null) {
+        _readLiveData(device);
+      } else {
+        print("⚠️ No device found for type: ${widget.deviceType}");
+      }
+    });
   }
 
-  if (device != null) {
-    _readLiveData(device);
-  } else {
-    print("⚠️ No device found for type: ${widget.deviceType}");
-  }
-});
-
-  }
-   Future<void> _readLiveData(BluetoothDevice device) async {
+  Future<void> _readLiveData(BluetoothDevice device) async {
     try {
       List<BluetoothService> services = await device.discoverServices();
 
       for (BluetoothService service in services) {
-        for (BluetoothCharacteristic characteristic in service.characteristics) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
           if (characteristic.properties.notify) {
             await characteristic.setNotifyValue(true);
             characteristic.value.listen((value) {
@@ -102,6 +108,7 @@ class _SessionScreenState extends State<SessionScreen> {
       print("XX Error reading live data: $e");
     }
   }
+
   Future<void> _loadUserData() async {
     try {
       // Get the current user directly from FirebaseAuth
@@ -255,65 +262,62 @@ class _SessionScreenState extends State<SessionScreen> {
     return "midfoot"; // Default fallback
   }
 
-
-   void startSession() {
-  setState(() {
-    isRunning = true;
-    // If timer is disabled, use 15 minutes, otherwise use the slider value
-    remainingSeconds = timerEnabled
-        ? sessionDuration.toInt() * 60
-        : 0; // 15 minutes in seconds
-  });
-
-  // Start the session timer
-  sessionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+  void startSession() {
     setState(() {
-      if (timerEnabled) {
-        if (remainingSeconds > 0) {
-          remainingSeconds--;
+      isRunning = true;
+      // If timer is disabled, use 15 minutes, otherwise use the slider value
+      remainingSeconds = timerEnabled
+          ? sessionDuration.toInt() * 60
+          : 0; // 15 minutes in seconds
+    });
+
+    // Start the session timer
+    sessionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (timerEnabled) {
+          if (remainingSeconds > 0) {
+            remainingSeconds--;
+          } else {
+            // Auto-stop when countdown reaches zero
+            stopSession();
+          }
         } else {
-          // Auto-stop when countdown reaches zero
-          stopSession();
+          remainingSeconds++;
         }
-      } else {
-        remainingSeconds++;
+      });
+    });
+
+    // Time simulation: reset after 1.5 seconds and update pressure
+    double simulationTime = 0.0; // Start from 0s
+    stimulationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      simulationTime += 0.1; // Increment time by 0.1 seconds
+
+      if (simulationTime >= 1.5) {
+        simulationTime = 0.0; // Reset time after 1.5 seconds
       }
+
+      final area = rightFootAreas.firstWhere((a) => a.id == 'F0');
+      Map<String, dynamic> result =
+          NeuromodulationLogic.computeModulation(area, simulationTime);
+
+      setState(() {
+        modulationResults = {
+          'pressure': result['pressure'],
+          'frequency': result['frequency'],
+          'amplitude': result['amplitude'],
+          'areaId': result['areaId'],
+          'zoneType': result['zoneType'],
+          'time': result['time'],
+          'phase': result['phase'],
+        };
+        currentPressure = result['pressure'];
+
+        // Optionally, update chart or any other state based on these results
+        // Example:
+        // pressureData.add(FlSpot(simulationTime, currentPressure));
+      });
     });
-  });
-
-  // Time simulation: reset after 1.5 seconds and update pressure
-  double simulationTime = 0.0; // Start from 0s
-  stimulationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
-    simulationTime += 0.1; // Increment time by 0.1 seconds
-
-    if (simulationTime >= 1.5) {
-      simulationTime = 0.0; // Reset time after 1.5 seconds
-    }
-
-    final area = rightFootAreas.firstWhere((a) => a.id == 'F0');
-    Map<String, dynamic> result = NeuromodulationLogic.computeModulation(area, simulationTime);
-
-    setState(() {
-      modulationResults = {
-        'pressure': result['pressure'],
-        'frequency': result['frequency'],
-        'amplitude': result['amplitude'],
-        'areaId': result['areaId'],
-        'zoneType': result['zoneType'],
-        'time': result['time'],
-        'phase': result['phase'],
-      };
-      currentPressure = result['pressure'];
-
-      // Optionally, update chart or any other state based on these results
-      // Example:
-      // pressureData.add(FlSpot(simulationTime, currentPressure)); 
-    });
-  });
-}
-
-
-  
+  }
 
   void stopSession() {
     // Save the session settings when stopping
@@ -924,9 +928,8 @@ class _SessionScreenState extends State<SessionScreen> {
                         ),
                     ],
                   ),
-                  
                 ),
-               if (bluetoothData != null) ...[
+              if (bluetoothData != null) ...[
                 Container(
                   margin: EdgeInsets.only(top: 20, bottom: 16),
                   padding: EdgeInsets.all(16),
@@ -1185,7 +1188,6 @@ class _SessionScreenState extends State<SessionScreen> {
                   ],
                 ),
               ),
-              
             ],
           ),
         ),

@@ -1,4 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/bluetooth_provider.dart';
 
 class PainReliefFeedbackScreen extends StatefulWidget {
   @override
@@ -409,8 +415,58 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
   // Track if session is active (for Start/Stop button)
   bool _isSessionActive = false;
 
+  Future<void> _writeLiveData(
+      BluetoothDevice device, Map<String, dynamic> jsonData) async {
+    try {
+      print("🚀 Attempting to write data to ${device.advName}");
+      List<BluetoothService> services = await device.discoverServices();
+      print("🔍 Discovered ${services.length} services.");
+
+      for (BluetoothService service in services) {
+        print("🔍 Service: ${service.uuid}");
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          print(
+              "🔎 Characteristic: ${characteristic.uuid} - Properties: ${characteristic.properties}");
+          print("🔎 Checking characteristic: ${characteristic.uuid}");
+
+          if (characteristic.properties.write &&
+              characteristic.uuid != Guid('2b29')) {
+            List<int> bytes = utf8.encode(json.encode(jsonData));
+            print("✍ Writing data: $jsonData (Bytes: $bytes)");
+
+            DateTime sendTime = DateTime.now();
+            await characteristic.write(bytes, withoutResponse: true);
+            print("📤 Data Sent at $sendTime");
+
+            // Check if there's a characteristic for receiving data
+            for (BluetoothCharacteristic c in service.characteristics) {
+              if (c.properties.notify || c.properties.indicate) {
+                await c.setNotifyValue(true);
+                c.lastValueStream.listen((value) {
+                  String receivedData = String.fromCharCodes(value);
+                  print("📡 Received Data: $receivedData");
+                });
+                print("✅ Listening for response on ${c.uuid}");
+                return;
+              }
+            }
+
+            print("⚠️ No notification characteristic found.");
+            return;
+          }
+        }
+      }
+      print("⚠️ No writable characteristic found.");
+    } catch (e) {
+      print("❌ Error writing data: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    BluetoothDevice? EC = context.watch<BluetoothProvider>().EC;
+
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = screenWidth * 0.05; // 5% of screen width
 
@@ -485,10 +541,18 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                 });
 
                 if (_isSessionActive) {
-                  // Session started
-                  // Navigate to the session screen or start the session
-                  // Navigator.of(context).pushNamed('/sessionscreen');
+                  final Map<String, dynamic> jsonData = {
+                    "command": "start_walking_mode",
+                    "mode": _selectedParadigm,
+                    "timestamp": DateTime.now().toUtc().toIso8601String(),
+                  };
+                  _writeLiveData(EC!, jsonData);
                 } else {
+                  final Map<String, dynamic> jsonData = {
+                    "command": "stop_walking_mode",
+                    "timestamp": DateTime.now().toUtc().toIso8601String(),
+                  };
+                  _writeLiveData(EC!, jsonData);
                   // Session stopped - show feedback screen
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -504,13 +568,13 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                       _isSessionActive
                           ? Icons.stop_circle_outlined
                           : Icons.play_circle_outline,
-                      size: 20),
+                      size: 24,
+                      color: Colors.white),
                   SizedBox(width: 8),
                   Text(
                     _isSessionActive ? "Stop" : "Start",
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
                     ),
                   ),
                 ],
@@ -555,24 +619,24 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
           color: const Color(0xFFECF0F1),
           borderRadius: BorderRadius.circular(6),
           border: isSelected
-              ? Border.all(color: const Color(0xFF5E8D9B), width: 1)
+              ? Border.all(color: const Color(0xFF3A6470), width: 1)
               : null,
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isSelected)
               Icon(
                 Icons.check_circle,
-                color: const Color(0xFF5E8D9B),
+                color: const Color(0xFF3A6470),
                 size: 22,
               ),
             if (isSelected) SizedBox(width: 10),
             Text(
               paradigm,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF5E8D9B) : Colors.grey[600],
+                color: const Color(0xFF3A6470),
                 fontSize: 16,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ],
