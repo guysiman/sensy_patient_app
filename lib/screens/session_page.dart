@@ -1034,7 +1034,7 @@ class _SessionScreenState extends State<SessionScreen> {
                     // Intensity bars
                     ...List.generate(5, (index) {
                       return Container(
-                        width: 50,
+                        width: 40,
                         height: 80.0 + (index * 30.0),
                         decoration: BoxDecoration(
                           color: index <= intensityLevel

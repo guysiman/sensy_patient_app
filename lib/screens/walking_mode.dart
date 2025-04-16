@@ -463,6 +463,56 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
     }
   }
 
+  Future<void> _readLiveData(BluetoothDevice device) async {
+    try {
+      List<BluetoothService> services = await device.discoverServices();
+
+      for (BluetoothService service in services) {
+        for (BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.properties.notify) {
+            await characteristic.setNotifyValue(true);
+
+            bool isFirstNotification = true;
+            String? lastProcessedData;
+
+            characteristic.value.listen((value) {
+              String receivedData = String.fromCharCodes(value).trim();
+              print("📡 Data Received: $receivedData");
+
+              if (isFirstNotification) {
+                // Skip the first notification to avoid processing cached data
+                isFirstNotification = false;
+                return;
+              }
+
+              if (receivedData == lastProcessedData) {
+                // Duplicate notification; ignore
+                return;
+              }
+
+              lastProcessedData = receivedData;
+
+              if (receivedData == "walking_mode_started") {
+                print("Walking mode started detected");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Walking mode active")),
+                  );
+                }
+              }
+            });
+
+            print("-- Listening for live data on ${characteristic.uuid}");
+          }
+        }
+      }
+    } catch (e) {
+      print("❌ Error reading live data: $e");
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     BluetoothDevice? EC = context.watch<BluetoothProvider>().EC;
@@ -542,15 +592,14 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
 
                 if (_isSessionActive) {
                   final Map<String, dynamic> jsonData = {
-                    "command": "start_walking_mode",
+                    "command": "start_walk",
                     "mode": _selectedParadigm,
-                    "timestamp": DateTime.now().toUtc().toIso8601String(),
                   };
                   _writeLiveData(EC!, jsonData);
+                  _readLiveData(EC!);
                 } else {
                   final Map<String, dynamic> jsonData = {
-                    "command": "stop_walking_mode",
-                    "timestamp": DateTime.now().toUtc().toIso8601String(),
+                    "command": "stop_walk",
                   };
                   _writeLiveData(EC!, jsonData);
                   // Session stopped - show feedback screen
