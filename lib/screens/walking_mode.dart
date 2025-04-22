@@ -414,6 +414,7 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
 
   // Track if session is active (for Start/Stop button)
   bool _isSessionActive = false;
+  bool _isWaitingForStartConfirmation = false;
 
   Future<void> _writeLiveData(
       BluetoothDevice device, Map<String, dynamic> jsonData) async {
@@ -495,6 +496,11 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
               if (receivedData == "walking_mode_started") {
                 print("Walking mode started detected");
                 if (mounted) {
+                  setState(() {
+                    _isSessionActive = true;
+                    _isWaitingForStartConfirmation = false;
+                  });
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Walking mode active")),
                   );
@@ -576,7 +582,7 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _isSessionActive
                     ? const Color(0xFFE53935) // Red for Stop
-                    : const Color(0xFF4CAF50), // Green for Start
+                    : (_isWaitingForStartConfirmation ? Colors.grey : Color(0xFF4CAF50)), // Green for Start
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -584,32 +590,38 @@ class _WalkingModeScreenState extends State<WalkingModeScreen> {
                 ),
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: () {
+              onPressed: (_isSessionActive || _isWaitingForStartConfirmation)
+                  ? _isSessionActive
+                  ? () {
+                // Handle STOP logic
+                final Map<String, dynamic> jsonData = {
+                  "command": "stop_walk",
+                };
+                _writeLiveData(EC!, jsonData);
                 setState(() {
-                  // Toggle session active state
-                  _isSessionActive = !_isSessionActive;
+                  _isSessionActive = false;
+                });
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PainReliefFeedbackScreen(),
+                  ),
+                );
+              }
+                  : null // Waiting for confirmation — disabled
+                  : () {
+                // Handle START logic
+                setState(() {
+                  _isWaitingForStartConfirmation = true;
                 });
 
-                if (_isSessionActive) {
-                  final Map<String, dynamic> jsonData = {
-                    "command": "start_walk",
-                    "mode": _selectedParadigm,
-                  };
-                  _writeLiveData(EC!, jsonData);
-                  _readLiveData(EC!);
-                } else {
-                  final Map<String, dynamic> jsonData = {
-                    "command": "stop_walk",
-                  };
-                  _writeLiveData(EC!, jsonData);
-                  // Session stopped - show feedback screen
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => PainReliefFeedbackScreen(),
-                    ),
-                  );
-                }
+                final Map<String, dynamic> jsonData = {
+                  "command": "start_walk",
+                  "mode": _selectedParadigm,
+                };
+                _writeLiveData(EC!, jsonData);
+                _readLiveData(EC!);
               },
+
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

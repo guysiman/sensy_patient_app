@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'dart:async';
 // Import the NeuromodulationCalculator
 import '../services/neuromodulation_calculator.dart';
@@ -17,7 +18,7 @@ class SessionScreen extends StatefulWidget {
   const SessionScreen({
     Key? key,
     required this.onContinue,
-    this.deviceType = 'ipg',
+    this.deviceType = 'ec',
   }) : super(key: key);
 
   @override
@@ -44,6 +45,7 @@ class _SessionScreenState extends State<SessionScreen> {
   int remainingSeconds = 0;
   Timer? sessionTimer;
   Timer? stimulationTimer;
+  Timer? writeDataTimer;
   String? bluetoothData;
   // Paradigm selection variables
   String selectedParadigm = "Standard";
@@ -108,6 +110,86 @@ class _SessionScreenState extends State<SessionScreen> {
       print("XX Error reading live data: $e");
     }
   }
+
+  dynamic roundIfExceedsFourDecimals(dynamic value) {
+    if (value == null) return 0.0; // Handle null case
+
+    if (value is num) {
+      final strValue = value.toString();
+      // Check if the number has more than 4 decimal places
+      if (strValue.contains('.') && strValue.split('.')[1].length > 4) {
+        return double.parse(value.toStringAsFixed(4));
+      }
+    }
+    return value; // Return original if <=4 decimals or not a number
+  }
+
+  Future<void> _writeLiveData(
+      BluetoothDevice device, Map<String, dynamic> modulationData) async {
+    try {
+      print("🚀 Attempting to write data to ${device.advName}");
+      List<BluetoothService> services = await device.discoverServices();
+      print("🔍 Discovered ${services.length} services.");
+
+      for (BluetoothService service in services) {
+        print("🔍 Service: ${service.uuid}");
+        for (BluetoothCharacteristic characteristic in service.characteristics) {
+          print("🔎 Characteristic: ${characteristic.uuid} - Properties: ${characteristic.properties}");
+
+          // Only write to writable characteristics (excluding certain UUIDs if needed)
+          if (characteristic.properties.write &&
+              characteristic.uuid != Guid('2b29')) {
+            // Construct JSON payload
+            // Map<String, dynamic> payload = {
+            //   'p': modulationData['pressure'],
+            //   'a': modulationData['amplitude'],
+            //   'f': modulationData['frequency'],
+            //   // 'timestamp': DateTime.now().toIso8601String()
+            // };
+            Map<String, dynamic> payload = {
+              'p': roundIfExceedsFourDecimals(modulationData['pressure']),
+              'a': {
+                's': roundIfExceedsFourDecimals(modulationData['amplitude']?['sai']),
+                'f': roundIfExceedsFourDecimals(modulationData['amplitude']?['fai']),
+              },
+              'f': {
+                's': roundIfExceedsFourDecimals(modulationData['frequency']?['sai']),
+                'f': roundIfExceedsFourDecimals(modulationData['frequency']?['fai']),
+              },
+            };
+
+
+            List<int> bytes = utf8.encode(json.encode(payload));
+            print("✍ Writing data: $payload (Bytes: ${bytes.length})");
+
+            DateTime sendTime = DateTime.now();
+            await characteristic.write(bytes, withoutResponse: true);
+            print("📤 Data Sent at $sendTime");
+
+            // Optionally listen for notification response from any notify-capable characteristic
+            for (BluetoothCharacteristic c in service.characteristics) {
+              if (c.properties.notify || c.properties.indicate) {
+                await c.setNotifyValue(true);
+                c.lastValueStream.listen((value) {
+                  String receivedData = String.fromCharCodes(value);
+                  print("📡 Received Data: $receivedData");
+                });
+                print("✅ Listening for response on ${c.uuid}");
+                return;
+              }
+            }
+
+            print("⚠️ No notification characteristic found.");
+            return;
+          }
+        }
+      }
+      print("⚠️ No writable characteristic found.");
+    } catch (e) {
+      print("❌ Error writing data: $e");
+    }
+  }
+
 
   Future<void> _loadUserData() async {
     try {
@@ -317,6 +399,40 @@ class _SessionScreenState extends State<SessionScreen> {
         // pressureData.add(FlSpot(simulationTime, currentPressure));
       });
     });
+
+    // Start sending data every 5 seconds
+    writeDataTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      if (modulationResults != null) {
+        Map<String, dynamic> dataToSend = {
+          'pressure': modulationResults!['pressure'],
+          'amplitude': modulationResults!['amplitude'],
+          'frequency': modulationResults!['frequency'],
+          // 'timestamp': DateTime.now().toIso8601String(), // Optional
+        };
+
+        final bluetoothProvider =
+        Provider.of<BluetoothProvider>(context, listen: false);
+        BluetoothDevice? device;
+
+        switch (widget.deviceType.toLowerCase()) {
+          case 'ipg':
+            device = bluetoothProvider.IPG;
+            break;
+          case 'ec':
+            device = bluetoothProvider.EC;
+            break;
+        }
+
+        if (device != null) {
+          await _writeLiveData(device, dataToSend);
+        } else {
+          print("❗ BLE device not found during write.");
+        }
+      } else {
+        print("⚠️ No modulation data to send.");
+      }
+    });
+
   }
 
   void stopSession() {
@@ -332,6 +448,8 @@ class _SessionScreenState extends State<SessionScreen> {
       sessionTimer = null;
       stimulationTimer?.cancel();
       stimulationTimer = null;
+      writeDataTimer?.cancel();
+      writeDataTimer = null;
       modulationResults = null;
       currentPressure = 0.0;
     });
