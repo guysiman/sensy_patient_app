@@ -15,6 +15,7 @@ import 'screens/home_page.dart';
 import 'screens/sign_in_page.dart';
 import 'screens/bluetooth_page.dart';
 import 'screens/main_page.dart';
+import 'screens/decoded_data_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -142,6 +143,7 @@ class MyApp extends StatelessWidget {
             '/devicepairingpage': (context) => DevicePairingPage(),
             '/bluetoothpage': (context) => BluetoothPage(),
             '/bluetoothoffpage': (context) => BluetoothOffPage(),
+            '/datapage': (context) => DecodedDataScreen(),
             '/mainpage': (context) => MainPage(),
           },
         );

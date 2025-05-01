@@ -35,6 +35,12 @@ class _HomePageState extends State<HomePage> {
                   Navigator.pushNamed(context, '/devicepairingpage');
                 },
               ),
+              // ElevatedButton(
+              //   child: const Text("Data"),
+              //   onPressed: () {
+              //     Navigator.pushNamed(context, '/datapage');
+              //   },
+              // ),
               ElevatedButton(
                 child: const Text("Mapping"),
                 onPressed: () {

@@ -400,8 +400,8 @@ class _SessionScreenState extends State<SessionScreen> {
       });
     });
 
-    // Start sending data every 5 seconds
-    writeDataTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+    // Start sending data every 20 ms
+    writeDataTimer = Timer.periodic(Duration(milliseconds: 20), (timer) async {
       if (modulationResults != null) {
         Map<String, dynamic> dataToSend = {
           'pressure': modulationResults!['pressure'],

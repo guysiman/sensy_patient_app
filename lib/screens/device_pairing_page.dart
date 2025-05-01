@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http; // ✅ Added for downloading
+import 'package:path/path.dart' as path;
+import 'dart:io';
 
 import '../providers/bluetooth_provider.dart';
 
@@ -36,9 +41,45 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
     });
   }
 
+  Future<void> requestPermissions() async {
+    await Permission.storage.request();
+  }
+
+  Future<String> getFilePath(String filename) async {
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    String appDocPath = appDocDir.path;
+    return path.join(appDocPath, filename);
+  }
+
+  // ✅ New method to download the file
+  Future<void> _downloadFile() async {
+    final url = 'https://raw.githubusercontent.com/nomaanakhan/Theorem-Prover-for-Clause-Logic/master/Test%20Cases/task1.in.txt';
+    final filename = 'task1.in.txt';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final filePath = await getFilePath(filename);
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+        print("✅ File downloaded to $filePath");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("File downloaded successfully.")),
+        );
+      } else {
+        throw Exception('Failed to download file');
+      }
+    } catch (e) {
+      print("❌ Error downloading file: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to download file.")),
+      );
+    }
+  }
+
   void _checkAndNavigate() {
     final bluetoothProvider =
-        Provider.of<BluetoothProvider>(context, listen: false);
+    Provider.of<BluetoothProvider>(context, listen: false);
     if (bluetoothProvider.IPG != null && bluetoothProvider.EC != null) {
       Navigator.pushReplacementNamed(context, '/mainpage');
     }
@@ -87,7 +128,7 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
       for (BluetoothService service in services) {
         print("🔍 Service: ${service.uuid}");
         for (BluetoothCharacteristic characteristic
-            in service.characteristics) {
+        in service.characteristics) {
           print(
               "🔎 Characteristic: ${characteristic.uuid} - Properties: ${characteristic.properties}");
           print("🔎 Checking characteristic: ${characteristic.uuid}");
@@ -101,7 +142,6 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
             await characteristic.write(bytes, withoutResponse: true);
             print("📤 Data Sent at $sendTime");
 
-            // Check if there's a characteristic for receiving data
             for (BluetoothCharacteristic c in service.characteristics) {
               if (c.properties.notify || c.properties.indicate) {
                 await c.setNotifyValue(true);
@@ -277,6 +317,16 @@ class _DevicePairingPageState extends State<DevicePairingPage> {
                       Navigator.pushNamed(context, '/homepage');
                     },
                     child: const Text('Go to the Home Screen'),
+                  ),
+                ),
+                SizedBox(height: 12),
+                // ✅ Download button added here
+                SizedBox(
+                  height: 44,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _downloadFile,
+                    child: const Text('Download Sample File'),
                   ),
                 ),
               ],
