@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sensy_patient_app/screens/sign_up_page.dart';
 import '../services/database.dart';
 import '../main.dart';
 
@@ -41,8 +43,31 @@ class _SignInPageState extends State<SignInPage> {
     String email = _emailController.text;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
-      // Directly use the email for authentication
       await authProvider.signIn(email, _passwordController.text);
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.emailVerified) {
+        await FirebaseAuth.instance.signOut();
+        setState(() {
+          errorMessage = 'Please verify your email before logging in.';
+        });
+        // Optionally show a dialog:
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Email not verified'),
+            content: Text('Please check your email for a verification link.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       Navigator.pushReplacementNamed(context, '/homepage');
     } catch (e) {
       setState(() {
@@ -55,7 +80,12 @@ class _SignInPageState extends State<SignInPage> {
     Navigator.pushNamed(context, '/forgotpwpage');
   }
 
-  void _onSignUp() {}
+  void _onSignUp() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PatientSignUpPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,9 +112,9 @@ class _SignInPageState extends State<SignInPage> {
                   decoration: InputDecoration(
                     labelText: 'Enter your email',
                     labelStyle:
-                    Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).hintColor,
-                    ),
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide(color: Color(0xFFE8EDEC))),
@@ -112,9 +142,9 @@ class _SignInPageState extends State<SignInPage> {
                   decoration: InputDecoration(
                     labelText: 'Enter your password',
                     labelStyle:
-                    Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).hintColor,
-                    ),
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide(color: Color(0xFFE8EDEC))),
@@ -135,8 +165,8 @@ class _SignInPageState extends State<SignInPage> {
                   onPressed: _onForgotPassword,
                   child: Text('Forgot password?',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      )),
+                            color: Theme.of(context).colorScheme.primary,
+                          )),
                 ),
 
                 const SizedBox(height: 40),
@@ -159,8 +189,8 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     onPressed: _isButtonEnabled
                         ? () {
-                      _onSignIn(context);
-                    }
+                            _onSignIn(context);
+                          }
                         : null,
                     child: const Text('Enter account'),
                   ),
@@ -176,16 +206,16 @@ class _SignInPageState extends State<SignInPage> {
                     Text(
                       "Don't have an account? ",
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 18,
-                      ),
+                            fontSize: 18,
+                          ),
                     ),
                     GestureDetector(
                       onTap: _onSignUp,
                       child: Text(
                         'Sign up',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                     ),
                   ],
