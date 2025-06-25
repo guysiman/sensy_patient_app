@@ -40,8 +40,17 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void _onSignIn(BuildContext context) async {
-    String email = _emailController.text;
+    String email = _emailController.text.trim();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid email address.')),
+      );
+      return;
+    }
+
     try {
       await authProvider.signIn(email, _passwordController.text);
 
@@ -51,7 +60,6 @@ class _SignInPageState extends State<SignInPage> {
         setState(() {
           errorMessage = 'Please verify your email before logging in.';
         });
-        // Optionally show a dialog:
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -70,9 +78,16 @@ class _SignInPageState extends State<SignInPage> {
 
       Navigator.pushReplacementNamed(context, '/homepage');
     } catch (e) {
+      String msg = e.toString();
+      if (msg.contains('firebase_auth/invalid-credential')) {
+        msg = 'Invalid email or password.';
+      }
       setState(() {
-        errorMessage = 'Login failed: ${e.toString()}';
+        errorMessage = 'Login failed: $msg';
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage ?? 'Login failed')),
+      );
     }
   }
 
@@ -171,10 +186,6 @@ class _SignInPageState extends State<SignInPage> {
 
                 const SizedBox(height: 40),
 
-                if (errorMessage != '') Text('$errorMessage'),
-
-                const SizedBox(height: 40),
-
                 // Enter account button
                 SizedBox(
                   width: double.infinity,
@@ -192,7 +203,7 @@ class _SignInPageState extends State<SignInPage> {
                             _onSignIn(context);
                           }
                         : null,
-                    child: const Text('Enter account'),
+                    child: const Text('Login'),
                   ),
                 ),
 
